@@ -26,6 +26,10 @@ img{max-width:100%}
 .sapa a{text-decoration:none;color:inherit}
 .sapa a:hover{color:var(--maroon)}
 
+/* Tombol Daftar di navbar (merah marun) */
+.nav a[href="/daftar"],.aksi a[href="/daftar"]{background:#6b2737!important;color:#fff!important;border-radius:999px;padding:.55rem 1.5rem;font-weight:600;text-decoration:none;box-shadow:0 6px 16px rgba(107,39,55,.22);transition:background .2s,transform .2s,box-shadow .2s}
+.nav a[href="/daftar"]:hover,.aksi a[href="/daftar"]:hover{background:#561f2d!important;transform:translateY(-1px);box-shadow:0 10px 22px rgba(107,39,55,.3)}
+
 /* ===== BANNER (hero beranda) =====
    Foto: /public/images/beranda.jpg */
 .banner{position:relative;z-index:1;margin-top:calc(var(--nav-h) * -1);padding:calc(var(--nav-h) + 3rem) 6vw 4rem;height:820px;display:flex;flex-direction:column;justify-content:flex-start;align-items:flex-start;overflow:hidden;background-color:#ead6cd;background-image:linear-gradient(90deg,rgba(250,246,242,.97) 0%,rgba(250,246,242,.92) 32%,rgba(250,246,242,.5) 58%,rgba(250,246,242,0) 82%),var(--bg,url('/images/beranda.jpg'));background-size:cover;background-position:center right;background-repeat:no-repeat}
@@ -563,3 +567,8 @@ body{background:#f6efeb;color:#2b2320;font-family:'DM Sans',sans-serif}
 .by-logo-dana{color:#118eea;letter-spacing:.12em}
 .by-logo-qris{color:#1d1a19;font-weight:800}
 .by-logo-bank{color:#6b2737;font-size:.75rem}
+
+/* ===== Data pemesan (disamakan dengan form Profil Pengguna) ===== */
+.by-kartu .p-form{margin:0}
+.by-kartu .p-form label{margin:0}
+.by-kartu .p-form textarea{min-height:90px;resize:vertical}
