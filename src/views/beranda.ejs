@@ -1,0 +1,54 @@
+<%- include('partials/header') %>
+<section class="banner">
+  <div class="banner-isi">
+    <p class="eyebrow">Jasa pengelolaan media sosial</p>
+    <h1>Tingkatkan <em>Brand</em><br>Fashion UMKM Anda<br>di Media Sosial</h1>
+    <p class="banner-teks">Foura Creative hadir untuk membantu UMKM fashion di Makassar mengelola media sosial secara profesional, kreatif, dan strategis.</p>
+    <div class="banner-aksi">
+      <a class="btn" href="/katalog">Lihat Katalog →</a>
+      <a class="btn ghost" href="#kalkulator">Coba Kalkulator</a>
+    </div>
+  </div>
+</section>
+
+<!-- ===== KALKULATOR ESTIMASI KEBUTUHAN ===== -->
+<section class="page" id="kalkulator">
+  <div class="kalkulator">
+    <div>
+      <h2>Kalkulator Estimasi Kebutuhan</h2>
+      <p class="muted">Dapatkan rekomendasi paket yang sesuai dengan kebutuhan media sosial bisnismu dalam hitungan detik.</p>
+      <form method="get" action="/#kalkulator" class="kalk-form">
+        <% Object.entries(kalk.opsi).forEach(([nama, o]) => { %>
+          <label><%= o.label %>
+            <select name="<%= nama %>">
+              <% o.pilihan.forEach(([nilai, teks]) => { %>
+                <option value="<%= nilai %>" <%= kalk.pilihan[nama] === nilai ? 'selected' : '' %>><%= teks %></option>
+              <% }) %>
+            </select>
+          </label>
+        <% }) %>
+        <button class="btn">Lihat Rekomendasi Paket →</button>
+      </form>
+    </div>
+
+    <div class="hasil">
+      <% if (kalk.hasil) { %>
+        <p class="muted">Rekomendasi Paket</p>
+        <p class="hasil-judul"><span class="lencana"><%= kalk.hasil.produk.name %></span>
+          <span class="harga"><%= rupiah(kalk.hasil.produk.price) %> <small>/bulan</small></span></p>
+        <% if (kalk.hasil.intro) { %><p class="muted"><%= kalk.hasil.intro %></p><% } %>
+        <% if (kalk.hasil.fitur.length) { %>
+          <ul class="fitur"><% kalk.hasil.fitur.forEach(f => { %><li><%= f %></li><% }) %></ul>
+        <% } %>
+        <p class="bantuan">Berdasarkan: <%= kalk.ringkasan.join(' · ') %></p>
+        <a class="btn ghost block" href="/produk/<%= kalk.hasil.produk.id %>">Lihat Detail</a>
+      <% } else if (kalk.dikirim) { %>
+        <p class="muted">Belum ada paket bundling untuk direkomendasikan. Silakan lihat <a href="/katalog">katalog layanan</a>.</p>
+      <% } else { %>
+        <p class="muted">Isi pilihan di samping, lalu rekomendasi paketmu akan muncul di sini.</p>
+      <% } %>
+    </div>
+  </div>
+</section>
+
+<%- include('partials/footer') %>

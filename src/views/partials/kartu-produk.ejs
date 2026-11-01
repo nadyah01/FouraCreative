@@ -1,0 +1,49 @@
+<%
+  const rpFmt = n => 'Rp ' + Number(n).toLocaleString('id-ID');
+  const satuanTxt = p.satuan === 'sekali bayar' ? '(sekali bayar)' : (p.satuan ? '/' + p.satuan : '');
+  const namaKat = (typeof kat !== 'undefined' && kat) ? kat.name_kategori : (p.category ? p.category.name_kategori : '');
+%>
+<article class="kp <%= p.populer ? 'kp-populer' : '' %>">
+  <div class="kp-gambar">
+    <% if (p.populer) { %><span class="kp-label">Paling Dipilih</span><% } %>
+    <% if (p.gambar) { %>
+      <img src="<%= p.gambar %>" alt="<%= p.name %>" loading="lazy">
+    <% } else { %>
+      <span class="kp-huruf"><%= p.name.replace(/^Paket\s+/, '').charAt(0) %></span>
+    <% } %>
+  </div>
+  <div class="kp-isi">
+    <% if (namaKat) { %><span class="kp-badge"><%= namaKat %></span><% } %>
+    <h3><%= p.name %></h3>
+    <p class="kp-desk"><%= p.deskripsi %></p>
+
+    <% if (p.fitur && p.fitur.length) { %>
+      <ul class="kp-fitur">
+        <% p.fitur.forEach(f => { %><li><%= f %></li><% }) %>
+      </ul>
+    <% } %>
+
+    <% if (p.catatan) { %><p class="kp-catatan"><%= p.catatan %></p><% } %>
+    <% if (p.waktu) { %><p class="kp-waktu">Waktu pengerjaan: <strong><%= p.waktu %></strong></p><% } %>
+
+    <p class="kp-harga"><%= rpFmt(p.price) %> <small><%= satuanTxt %></small></p>
+
+        <%
+      const sudahAda = (typeof idKeranjang !== 'undefined') && idKeranjang.includes(p.id);
+    %>
+    <div class="kp-aksi" data-id="<%= p.id %>">
+      <form method="POST" action="/keranjang/tambah" class="kp-f-tambah" <%= sudahAda ? 'hidden' : '' %>>
+        <input type="hidden" name="produkId" value="<%= p.id %>">
+        <button type="submit" class="kp-btn">+ Keranjang</button>
+      </form>
+      <form method="POST" action="/keranjang/batal" class="kp-f-batal" <%= sudahAda ? '' : 'hidden' %>>
+        <input type="hidden" name="produkId" value="<%= p.id %>">
+        <div class="kp-ok">
+          <span>✓ Ditambahkan</span>
+          <button type="submit" class="kp-batal">Batalkan</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</article>
+

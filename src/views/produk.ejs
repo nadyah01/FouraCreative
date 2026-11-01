@@ -1,0 +1,20 @@
+<%- include('partials/header') %>
+<section class="page">
+  <p class="muted"><a href="/katalog">← Katalog</a> / <a href="/katalog?kategori=<%= produk.category.id %>"><%= produk.category.name_kategori %></a></p>
+  <div class="detail">
+    <div>
+      <div class="utama"><% if (produk.image) { %><img src="/uploads/<%= produk.image %>" alt="<%= produk.name %>"><% } else { %><%= produk.name.charAt(0).toUpperCase() %><% } %></div>
+      <% if (produk.gambar_tambahan.length) { %>
+        <div class="galeri"><% produk.gambar_tambahan.forEach(m => { %><a href="/uploads/<%= m.file %>" target="_blank" rel="noopener"><img src="/uploads/<%= m.file %>" alt="Gambar tambahan <%= produk.name %>"></a><% }) %></div>
+      <% } %>
+    </div>
+    <div>
+      <span class="tag"><%= produk.category.name_kategori %></span>
+      <h1><%= produk.name %></h1>
+      <p class="harga"><%= rupiah(produk.price) %></p>
+      <% if (produk.deskripsi) { %><p class="deskripsi"><%= produk.deskripsi %></p><% } else { %><p class="muted">Belum ada deskripsi.</p><% } %>
+      <% if (role === 'admin'') { %><p><a class="btn ghost" href="/kelola/produk/<%= produk.id %>/edit">Ubah produk</a></p><% } %>
+    </div>
+  </div>
+</section>
+<%- include('partials/footer') %>

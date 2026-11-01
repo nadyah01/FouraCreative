@@ -1,0 +1,27 @@
+<%- include('../partials/header') %>
+<section class="page">
+  <h1>Kelola Pengguna</h1>
+  <p class="muted">Ubah peran pengguna: Pelanggan, Penjual, atau Admin.</p>
+  <div class="scroll-x"><table class="tabel">
+    <thead><tr><th>Username</th><th>Nama</th><th>Email</th><th>Peran</th><th>Ubah peran</th></tr></thead>
+    <tbody>
+    <% daftar.forEach(({ u, peran }) => { %>
+      <tr>
+        <td><b><%= u.username %></b></td>
+        <td><%= u.first_name %> <%= u.last_name %></td>
+        <td><%= u.email || '-' %></td>
+        <td><span class="tag"><%= LABEL[peran] %></span></td>
+        <td>
+          <% if (u.id === user.id) { %><span class="muted">(kamu)</span><% } else { %>
+          <form method="post" action="/kelola/pengguna/<%= u.id %>/peran" class="aksi-sel">
+            <select name="peran"><% ROLES.forEach(r => { %><option value="<%= r %>" <%= r === peran ? 'selected' : '' %>><%= LABEL[r] %></option><% }) %></select>
+            <button class="btn ghost sm">Simpan</button>
+          </form>
+          <% } %>
+        </td>
+      </tr>
+    <% }) %>
+    </tbody>
+  </table></div>
+</section>
+<%- include('../partials/footer') %>

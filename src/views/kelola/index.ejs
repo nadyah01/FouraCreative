@@ -1,0 +1,20 @@
+<%- include('../partials/header') %>
+<section class="page">
+  <h1>Kelola</h1>
+  <p class="muted">Masuk sebagai <%= LABEL[role] %>.</p>
+  <div class="statistik">
+    <div class="kartu"><b><%= produk %></b>Produk</div>
+    <% if (role === 'admin') { %>
+      <div class="kartu"><b><%= kategori %></b>Kategori</div>
+      <div class="kartu"><b><%= pengguna %></b>Pengguna</div>
+    <% } %>
+  </div>
+  <div class="banner-aksi">
+    <a class="btn" href="/kelola/produk">Kelola Produk</a>
+    <% if (role === 'admin') { %>
+      <a class="btn ghost" href="/kelola/kategori">Kelola Kategori</a>
+      <a class="btn ghost" href="/kelola/pengguna">Kelola Pengguna</a>
+    <% } %>
+  </div>
+</section>
+<%- include('../partials/footer') %>

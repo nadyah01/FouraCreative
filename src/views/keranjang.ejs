@@ -1,0 +1,51 @@
+<%- include('partials/header') %>
+<% const rp = n => 'Rp ' + Number(n).toLocaleString('id-ID'); %>
+<section class="page">
+  <h1 class="kr-judul">Keranjang</h1>
+
+  <% if (!item.length) { %>
+    <div class="kr-kosong">
+      <p>Keranjang kamu masih kosong.</p>
+      <a class="btn-tambah" href="/katalog">Lihat Katalog Layanan</a>
+    </div>
+  <% } else { %>
+    <div class="kr-grid">
+      <div>
+        <% item.forEach(i => { %>
+          <article class="kr-item">
+            <% if (i.gambar) { %>
+              <img src="<%= i.gambar %>" alt="<%= i.nama %>">
+            <% } else { %>
+              <span class="kr-ph"><%= i.nama.replace(/^Paket\s+/, '').charAt(0) %></span>
+            <% } %>
+            <div class="kr-info">
+              <small><%= i.kategori %></small>
+              <h3><%= i.nama %></h3>
+              <p><%= rp(i.harga) %> <% if (i.satuan) { %><small>/<%= i.satuan %></small><% } %></p>
+            </div>
+            <div class="kr-qty">
+              <form method="POST" action="/keranjang/<%= i.id %>/ubah"><input type="hidden" name="aksi" value="kurang"><button type="submit">−</button></form>
+              <span><%= i.jumlah %></span>
+              <form method="POST" action="/keranjang/<%= i.id %>/ubah"><input type="hidden" name="aksi" value="tambah"><button type="submit">+</button></form>
+            </div>
+            <b class="kr-sub"><%= rp(i.harga * i.jumlah) %></b>
+            <form method="POST" action="/keranjang/<%= i.id %>/hapus"><button type="submit" class="kr-hapus" title="Hapus">×</button></form>
+          </article>
+        <% }) %>
+      </div>
+
+      <aside class="kr-ringkas">
+        <h3>Ringkasan</h3>
+        <div class="kr-total"><span>Total</span><b><%= rp(total) %></b></div>
+        <form method="GET" action="/pembayaran">
+          <label>Catatan untuk tim (opsional)
+            <textarea name="catatan" rows="3" placeholder="Contoh: brand fashion hijab, target usia 20-30"></textarea>
+          </label>
+          <button type="submit" class="btn-tambah kr-btn">Pesan Sekarang</button>
+        </form>
+        <p class="kr-kecil">Setelah memesan, tim kami akan menghubungi kamu untuk brief dan pembayaran.</p>
+      </aside>
+    </div>
+  <% } %>
+</section>
+<%- include('partials/footer') %>

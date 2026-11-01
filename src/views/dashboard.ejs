@@ -1,0 +1,539 @@
+<%
+  const rp = n => 'Rp ' + Number(n || 0).toLocaleString('id-ID');
+  const inisial = String(locals.nama || '?').charAt(0).toUpperCase();
+  const isAdmin = locals.isAdmin ?? (locals.mode === 'admin');
+  const role = locals.role || '';
+  const perKategori = locals.perKategori || [];
+  const maksKat = locals.maksKat || Math.max(1, ...perKategori.map(k => k.jumlah));
+  const totalProduk = locals.totalProduk ?? 0;
+  const totalKategori = locals.totalKategori ?? 0;
+  const totalPengguna = locals.totalPengguna ?? null;
+  const pesananBaru = locals.pesananBaru ?? 0;
+  const pesananMasuk = locals.pesananMasuk || [];
+  const produkTerbaru = locals.produkTerbaru || [];
+  const aktivitas = locals.aktivitas || [];
+  const ringkasan = locals.ringkasan || { jumlahBulanIni: 0, nilai: 0, menunggu: 0, dikerjakan: 0, selesai: 0 };
+  const kelasStatus = locals.kelasStatus || { menunggu: 'baru', dikerjakan: 'proses', selesai: 'ok' };
+  const labelStatus = locals.labelStatus || { menunggu: 'Menunggu', dikerjakan: 'Sedang Dikerjakan', selesai: 'Selesai' };
+  const paket = locals.paket || null;
+  const totalPesanan = locals.totalPesanan ?? 0;
+  const pesanan = locals.pesanan || [];
+  const progress = locals.progress || null;
+  const progressKode = locals.progressKode || '';
+%>
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Dashboard — Foura Creative</title>
+  <link rel="icon" type="image/png" href="/images/logo.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Playfair+Display:wght@500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *{box-sizing:border-box}
+    img{max-width:100%}
+    body{margin:0;font-family:'DM Sans',sans-serif;background:#f6efeb;color:#2b2320}
+    h1,h2,h3,.d-paket-nama,.d-harga{font-family:'Playfair Display',serif}
+    a{text-decoration:none;color:inherit}
+    small{color:#8a7774}
+
+    .d-app{display:grid;grid-template-columns:250px 1fr;min-height:100vh}
+
+    /* sidebar */
+    .d-side{color:#eadfd6;padding:24px 18px;display:flex;flex-direction:column;position:sticky;top:0;height:100vh;
+      background:linear-gradient(180deg,#22201d 55%,rgba(34,32,29,.78)),url('/images/hero.jpg') center bottom/cover,#22201d}
+    .d-brand{display:flex;align-items:center;gap:12px;margin-bottom:32px}
+    .d-brand img{width:46px;height:46px;border-radius:50%;object-fit:contain;background:#fff}
+    .d-brand b{display:block;font-family:'Playfair Display',serif;font-size:1.05rem;color:#fff}
+    .d-brand small{color:#bfb2a6;font-size:.72rem}
+    .d-menu{display:flex;flex-direction:column;gap:6px}
+    .d-menu a,.d-menu button{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:10px;color:#d8cfc4;background:none;border:0;font:inherit;font-size:.92rem;cursor:pointer;text-align:left}
+    .d-menu a:hover,.d-menu button:hover{background:rgba(255,255,255,.08)}
+    .d-menu a.on{background:#6b2737;color:#fff}
+    .d-menu span{width:20px;text-align:center}
+    .d-quote{margin-top:auto;font-family:'Playfair Display',serif;font-style:italic;font-size:1.5rem;line-height:1.3;color:rgba(255,255,255,.55)}
+
+    /* main */
+    .d-main{padding:22px 32px 40px;min-width:0}
+    .d-top{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:24px}
+    .d-search{flex:1;max-width:480px}
+    .d-search input{width:100%;padding:12px 18px;border:1px solid #e6d6d2;border-radius:12px;background:#fffaf9;font:inherit;font-size:.9rem}
+    .d-user{display:flex;align-items:center;gap:18px}
+    .d-bell{position:relative;cursor:pointer}
+    .d-bell i{position:absolute;top:-2px;right:-2px;width:8px;height:8px;border-radius:50%;background:#c0392b}
+    .d-chip{display:flex;align-items:center;gap:10px}
+    .d-chip b{display:block;font-size:.88rem}
+    .d-chip small{font-size:.72rem}
+    .d-caret{color:#8a7774;font-size:.8rem}
+    .d-ava{width:38px;height:38px;border-radius:50%;background:#6b2737;color:#fff;display:grid;place-items:center;font-weight:600}
+    .d-ava-img{object-fit:cover;display:block}
+
+    .d-cols{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:24px;align-items:start}
+    .d-eyebrow{letter-spacing:.15em;text-transform:uppercase;font-size:.72rem;color:#7a6a67;margin:0 0 6px}
+    .d-muted{color:#6f615d;font-size:.88rem;line-height:1.7;margin:0}
+
+    .d-welcome{display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:center;margin-bottom:20px}
+    .d-welcome h1{font-size:2.3rem;margin:0 0 10px;color:#2b2320}
+    .d-spark{color:#6b2737;font-size:1.1rem;vertical-align:super}
+    .d-banner{height:150px;border-radius:14px;overflow:hidden}
+    .d-banner img{width:100%;height:100%;object-fit:cover;display:block}
+
+    .d-stats{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px}
+    .d-stat{display:flex;align-items:center;gap:14px;background:#fffaf9;border:1px solid #ecd9d6;border-radius:14px;padding:16px 18px}
+    .d-stat div{flex:1}
+    .d-stat small{display:block;font-size:.75rem}
+    .d-stat strong{display:block;font-family:'Playfair Display',serif;font-size:1.3rem;margin:2px 0}
+    .d-stat em{font-style:normal;font-size:.72rem;color:#8a7774}
+    .d-ico{width:44px;height:44px;border-radius:50%;background:#f3dfdc;color:#6b2737;display:grid;place-items:center;flex-shrink:0}
+    .d-arrow{color:#b79b97;font-size:1.4rem}
+
+    .d-judul{font-size:1.25rem;margin:24px 0 14px}
+    .d-card{background:#fffaf9;border:1px solid #ecd9d6;border-radius:14px;padding:20px}
+    .t{margin:0 0 6px;font-size:1.05rem}
+
+    .d-order{display:flex;align-items:center;gap:18px;background:#fffaf9;border:1px solid #ecd9d6;border-radius:14px;padding:14px;margin-bottom:12px}
+    .d-order img{width:104px;height:80px;object-fit:cover;border-radius:10px;flex-shrink:0}
+    .d-order-info{flex:1;min-width:0}
+    .d-order-info h3{margin:2px 0 4px;font-size:1.02rem;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+    .d-order-info small{display:block}
+    .d-harga{color:#6b2737;font-size:1.05rem;margin:6px 0 0}
+    .d-harga small{display:inline;font-family:'DM Sans',sans-serif;font-size:.72rem}
+    .d-badge{display:inline-flex;align-items:center;font-family:'DM Sans',sans-serif;font-size:.68rem;font-weight:500;padding:3px 10px;border-radius:999px;white-space:nowrap}
+    .d-badge::before{content:"";width:6px;height:6px;border:1.5px solid currentColor;border-radius:50%;margin-right:6px}
+    .d-badge.baru{background:#fff1d6;color:#9a6a12}
+    .d-badge.proses{background:#fbe3e3;color:#b23a48}
+    .d-badge.ok{background:#e1f2e5;color:#2f7a45}
+    .d-btn-detail{display:inline-block;border:1px solid #e6d6d2;border-radius:8px;padding:8px 14px;font-size:.8rem;color:#6b2737;white-space:nowrap;background:#fff}
+    .d-btn-detail:hover{background:#6b2737;color:#fff}
+
+    /* progress */
+    .d-steps{display:flex;margin-bottom:18px}
+    .d-step{flex:1;text-align:center;position:relative;font-size:.75rem}
+    .d-step::before{content:"";position:absolute;top:11px;left:-50%;width:100%;height:2px;background:#e0cfcb}
+    .d-step:first-child::before{display:none}
+    .d-step.done::before{background:#6b2737}
+    .d-dot{position:relative;z-index:1;width:24px;height:24px;border-radius:50%;background:#fffaf9;border:2px solid #c9b3af;display:grid;place-items:center;margin:0 auto 8px;color:#fff;font-size:.7rem}
+    .d-step.done .d-dot{background:#6b2737;border-color:#6b2737}
+    .d-step b{display:block;font-weight:500}
+    .d-note{display:flex;gap:14px;align-items:center;background:#f8ecea;border-radius:12px;padding:14px}
+    .d-note p{margin:0;font-size:.78rem;color:#6f615d;line-height:1.6;flex:1}
+    .d-note a{font-size:.78rem;color:#6b2737;white-space:nowrap}
+
+    /* kolom kanan */
+    .d-right{display:flex;flex-direction:column;gap:18px}
+    .d-paket-top{display:flex;justify-content:space-between;gap:12px}
+    .d-paket-top h3{margin:0 0 8px;font-size:1.05rem}
+    .d-paket-nama{font-size:1.5rem;margin:0}
+    .d-card h4{margin:16px 0 10px;font-size:.88rem}
+    .d-benefit{list-style:none;margin:0;padding:0}
+    .d-benefit li{position:relative;padding-left:24px;margin-bottom:8px;font-size:.82rem}
+    .d-benefit li::before{content:"✓";position:absolute;left:0;color:#6b2737}
+
+    .d-btn{display:inline-block;background:#6b2737;color:#fff;border:0;border-radius:8px;padding:10px 16px;font:inherit;font-size:.82rem;cursor:pointer;height:fit-content}
+    .d-btn:hover{background:#561f2d}
+    .d-btn-out{background:#fff;color:#6b2737;border:1px solid #d9c3bf;border-radius:8px;padding:10px 22px;font:inherit;font-size:.85rem;cursor:pointer}
+
+    .d-help{position:relative;border-radius:14px;overflow:hidden;min-height:150px;display:flex;align-items:center;background:#3a2a28}
+    .d-help img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.55}
+    .d-help div{position:relative;padding:20px;color:#fff;margin-left:auto;width:60%}
+    .d-help h3{margin:0 0 6px}
+    .d-help p{font-size:.78rem;margin:0 0 12px;opacity:.9}
+
+    .d-akt-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+    .d-akt-head h3{margin:0;font-size:1.05rem}
+    .d-akt-head a{font-size:.75rem;color:#6b2737}
+    .d-akt{list-style:none;margin:0;padding:0}
+    .d-akt li{display:flex;gap:12px;margin-bottom:18px}
+    .d-akt .d-dot{margin:0;flex-shrink:0;background:#6b2737;border-color:#6b2737}
+    .d-akt li.done .d-dot{background:#dcebdd;border-color:#dcebdd;color:#2f7a45}
+    .d-akt b{font-size:.82rem;display:block}
+    .d-akt p{margin:2px 0;font-size:.75rem;color:#6f615d}
+    .d-akt small{font-size:.7rem}
+
+    /* kosong / placeholder */
+    .d-kosong{background:#fffaf9;border:1px dashed #dcc5c0;border-radius:14px;padding:26px;text-align:center;color:#8a7774;font-size:.88rem;line-height:1.7}
+    .d-kosong .d-btn{margin-top:12px}
+    .d-kosong.polos{border:0;padding:8px}
+    .d-ph{width:104px;height:80px;border-radius:10px;background:#f3dfdc;color:#6b2737;display:grid;place-items:center;font-family:'Playfair Display',serif;font-size:1.6rem;flex-shrink:0}
+
+    /* admin */
+    .d-aksi{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:8px}
+    .d-judul-row{display:flex;justify-content:space-between;align-items:baseline;margin:24px 0 14px}
+    .d-judul-row .d-judul{margin:0}
+    .d-judul-row a{font-size:.8rem;color:#6b2737}
+
+    .d-tabel-wrap{overflow-x:auto;background:#fffaf9;border:1px solid #ecd9d6;border-radius:14px}
+    .d-tabel{width:100%;border-collapse:collapse;font-size:.85rem}
+    .d-tabel th{text-align:left;padding:12px 16px;font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;color:#7a6a67;border-bottom:1px solid #ecd9d6}
+    .d-tabel td{padding:12px 16px;border-bottom:1px solid #f1e3e0}
+    .d-tabel tr:last-child td{border-bottom:0}
+    .d-tabel .kode{font-weight:600;color:#6b2737;white-space:nowrap}
+
+    .d-prod{display:flex;justify-content:space-between;align-items:center;gap:12px;background:#fffaf9;border:1px solid #ecd9d6;border-radius:12px;padding:12px 16px;margin-bottom:10px}
+    .d-prod b{display:block;font-size:.92rem}
+    .d-prod .h{font-family:'Playfair Display',serif;color:#6b2737;white-space:nowrap}
+
+    .d-uang{font-family:'Playfair Display',serif;font-size:1.7rem;color:#6b2737;margin:6px 0 14px}
+    .d-mini{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;text-align:center}
+    .d-mini div{background:#f8ecea;border-radius:10px;padding:10px 6px}
+    .d-mini strong{display:block;font-size:1.15rem}
+    .d-mini small{font-size:.7rem}
+
+    .d-bar{margin-top:14px}
+    .d-bar-top{display:flex;justify-content:space-between;font-size:.82rem;margin-bottom:6px}
+    .d-bar-track{height:8px;border-radius:999px;background:#f0e1de;overflow:hidden}
+    .d-bar-isi{height:100%;width:0;border-radius:999px;background:#6b2737}
+
+    /* dialog keluar */
+    .d-dialog{border:0;border-radius:18px;padding:32px 36px;text-align:center;max-width:380px;position:relative}
+    .d-dialog::backdrop{background:rgba(0,0,0,.55)}
+    .d-dialog h3{font-size:1.2rem;margin:12px 0 8px}
+    .d-dialog p{font-size:.85rem;color:#6f615d;margin:0 0 22px;line-height:1.6}
+    .d-dlg-ico{width:52px;height:52px;border-radius:12px;background:#f3dfdc;color:#6b2737;display:inline-grid;place-items:center;font-size:1.3rem}
+    .d-dlg-aksi{display:flex;gap:12px;justify-content:center}
+    .d-dlg-aksi form{margin:0}
+    .d-x{position:absolute;top:10px;right:14px;background:none;border:0;font-size:1.5rem;cursor:pointer;color:#8a7774}
+
+    @media(max-width:1100px){.d-cols{grid-template-columns:1fr}}
+    @media(max-width:800px){
+      .d-app{grid-template-columns:1fr}
+      .d-side{position:static;height:auto;background:#22201d}
+      .d-quote{display:none}
+      .d-menu{flex-direction:row;flex-wrap:wrap}
+      .d-main{padding:18px 16px 32px}
+      .d-welcome,.d-stats{grid-template-columns:1fr}
+      .d-order{flex-wrap:wrap}
+      .d-steps{overflow-x:auto}
+      .d-step{min-width:90px}
+    }
+  </style>
+</head>
+<body>
+<div class="d-app">
+
+  <!-- SIDEBAR -->
+  <aside class="d-side">
+    <a href="/" class="d-brand">
+      <img src="/images/logo.png" alt="Logo Foura Creative">
+      <div><b>Foura Creative</b><small>Create, Connect, Grow</small></div>
+    </a>
+    <nav class="d-menu">
+      <a href="/dashboard" class="on"><span>▦</span> Dashboard</a>
+      <% if (isAdmin) { %>
+        <a href="/admin/pesanan"><span>◈</span> Kelola Pesanan</a>
+        <a href="/kelola/produk"><span>▣</span> Kelola Katalog</a>
+        <a href="/kelola/kategori"><span>☰</span> Kelola Kategori</a>
+        <% if (role === 'admin') { %><a href="/kelola/pengguna"><span>☺</span> Kelola Pengguna</a><% } %>
+      <% } else { %>
+        <a href="/riwayat"><span>☰</span> Riwayat Pesanan</a>
+        <a href="/profil"><span>☺</span> Profil Pengguna</a>
+      <% } %>
+      <button type="button" id="btnKeluar"><span>⇥</span> Keluar</button>
+    </nav>
+    <p class="d-quote">More Views<br>More Customers</p>
+  </aside>
+
+  <!-- ISI -->
+  <main class="d-main">
+    <header class="d-top">
+      <div class="d-search">
+        <input type="search" placeholder="<%= isAdmin ? 'Cari produk, pelanggan, atau pesanan...' : 'Cari pesanan, layanan, atau informasi...' %>">
+      </div>
+      <div class="d-user">
+        <span class="d-bell" title="Notifikasi">🔔<% if (isAdmin && pesananBaru > 0) { %><i></i><% } else if (!isAdmin) { %><i></i><% } %></span>
+        <div class="d-chip">
+          <% if (locals.fotoUser) { %><img class="d-ava d-ava-img" src="<%= fotoUser %>" alt=""><% } else { %><span class="d-ava"><%= inisial %></span><% } %>
+          <div><b><%= locals.nama %></b><small><%= locals.peran %></small></div>
+          <span class="d-caret">▾</span>
+        </div>
+      </div>
+    </header>
+
+<% if (isAdmin) { %>
+    <!-- =================== ADMIN / SELLER =================== -->
+    <div class="d-cols">
+      <div class="d-left">
+
+        <section class="d-welcome">
+          <div>
+            <p class="d-eyebrow">Panel <%= locals.peran %></p>
+            <h1><%= locals.nama %></h1>
+            <p class="d-muted">Pantau katalog, pengguna, dan pesanan masuk Foura Creative dari satu tempat.</p>
+          </div>
+          <div class="d-banner"><img src="/images/hero.jpg" alt="Foura Creative"></div>
+        </section>
+
+        <div class="d-stats">
+          <a class="d-stat" href="/kelola/produk">
+            <span class="d-ico">▣</span>
+            <div><small>Total Produk</small><strong><%= totalProduk %> produk</strong><em>di katalog layanan</em></div>
+            <span class="d-arrow">›</span>
+          </a>
+          <a class="d-stat" href="/kelola/kategori">
+            <span class="d-ico">☰</span>
+            <div><small>Kategori</small><strong><%= totalKategori %> kategori</strong><em>paket dan jasa satuan</em></div>
+            <span class="d-arrow">›</span>
+          </a>
+          <% if (role === 'admin') { %>
+          <a class="d-stat" href="/kelola/pengguna">
+            <span class="d-ico">☺</span>
+            <div><small>Pengguna</small><strong><%= totalPengguna === null ? '-' : totalPengguna + ' akun' %></strong><em>terdaftar di situs</em></div>
+            <span class="d-arrow">›</span>
+          </a>
+          <% } %>
+          <a class="d-stat" href="/admin/pesanan">
+            <span class="d-ico">◈</span>
+            <div><small>Pesanan Baru</small><strong><%= pesananBaru %> pesanan</strong><em>menunggu diproses</em></div>
+            <span class="d-arrow">›</span>
+          </a>
+        </div>
+
+        <h2 class="d-judul">Aksi Cepat</h2>
+        <div class="d-aksi">
+          <a class="d-btn" href="/kelola/produk/baru">+ Tambah Layanan</a>
+          <a class="d-btn-detail" href="/admin/pesanan">Kelola Pesanan</a>
+          <a class="d-btn-detail" href="/kelola/produk">Kelola Katalog</a>
+        </div>
+
+        <div class="d-judul-row">
+          <h2 class="d-judul">Pesanan Masuk</h2>
+          <a href="/admin/pesanan">Lihat Semua →</a>
+        </div>
+        <% if (pesananMasuk.length) { %>
+          <div class="d-tabel-wrap">
+            <table class="d-tabel">
+              <thead><tr><th>Kode</th><th>Pelanggan</th><th>Layanan</th><th>Total</th><th>Status</th></tr></thead>
+              <tbody>
+                <% pesananMasuk.forEach(o => { %>
+                  <tr>
+                    <td class="kode"><%= o.kode %></td>
+                    <td><%= o.pelanggan %></td>
+                    <td><%= o.layanan %></td>
+                    <td><%= rp(o.total) %></td>
+                    <td><span class="d-badge <%= kelasStatus[o.status] %>"><%= labelStatus[o.status] %></span></td>
+                  </tr>
+                <% }) %>
+              </tbody>
+            </table>
+          </div>
+        <% } else { %>
+          <div class="d-kosong">Belum ada pesanan masuk. Pesanan pelanggan akan muncul di sini.</div>
+        <% } %>
+
+        <div class="d-judul-row">
+          <h2 class="d-judul">Produk Terbaru</h2>
+          <a href="/kelola/produk">Kelola Katalog →</a>
+        </div>
+        <% if (produkTerbaru.length) { %>
+          <% produkTerbaru.forEach(p => { %>
+            <div class="d-prod">
+              <div><b><%= p.nama %></b><small><%= p.kategori %></small></div>
+              <span class="h"><%= rp(p.harga) %></span>
+            </div>
+          <% }) %>
+        <% } else { %>
+          <div class="d-kosong">Belum ada produk.</div>
+        <% } %>
+      </div>
+
+      <aside class="d-right">
+        <section class="d-card">
+          <h3 class="t">Ringkasan Pesanan</h3>
+          <small>Nilai pesanan bulan ini (<%= ringkasan.jumlahBulanIni %> pesanan)</small>
+          <p class="d-uang"><%= rp(ringkasan.nilai) %></p>
+          <div class="d-mini">
+            <div><strong><%= ringkasan.menunggu %></strong><small>Menunggu</small></div>
+            <div><strong><%= ringkasan.dikerjakan %></strong><small>Dikerjakan</small></div>
+            <div><strong><%= ringkasan.selesai %></strong><small>Selesai</small></div>
+          </div>
+        </section>
+
+        <section class="d-card">
+          <h3 class="t">Katalog per Kategori</h3>
+          <% perKategori.forEach(k => { %>
+            <% const lebar = maksKat ? Math.round(k.jumlah / maksKat * 100) : 0; %>
+            <div class="d-bar">
+              <div class="d-bar-top"><span><%= k.nama %></span><b><%= k.jumlah %> produk</b></div>
+              <div class="d-bar-track"><div class="d-bar-isi" data-lebar="<%= lebar %>"></div></div>
+            </div>
+          <% }) %>
+        </section>
+
+        <section class="d-card">
+          <div class="d-akt-head"><h3>Aktivitas Terbaru</h3><a href="/admin/pesanan">Lihat Semua →</a></div>
+          <% if (aktivitas.length) { %>
+            <ul class="d-akt">
+              <% aktivitas.forEach(a => { %>
+                <li class="<%= a.selesai ? 'done' : '' %>">
+                  <span class="d-dot"><%= a.selesai ? '✓' : '' %></span>
+                  <div><b><%= a.judul %></b><p><%= a.ket %></p><small><%= a.tanggal %></small></div>
+                </li>
+              <% }) %>
+            </ul>
+          <% } else { %>
+            <div class="d-kosong polos">Belum ada aktivitas.</div>
+          <% } %>
+        </section>
+      </aside>
+    </div>
+
+<% } else { %>
+    <!-- =================== PELANGGAN =================== -->
+    <div class="d-cols">
+      <div class="d-left">
+
+        <section class="d-welcome">
+          <div>
+            <p class="d-eyebrow">Selamat datang kembali,</p>
+            <h1><%= locals.nama %> <span class="d-spark">✦</span></h1>
+            <p class="d-muted">Terima kasih sudah mempercayakan Foura Creative untuk mengembangkan brand kamu. Yuk, pantau pesanan dan perkembangan proyek kamu di sini.</p>
+          </div>
+          <div class="d-banner"><img src="/images/hero.jpg" alt="Foura Creative"></div>
+        </section>
+
+        <div class="d-stats">
+          <a class="d-stat" href="<%= paket ? '/riwayat' : '/katalog' %>">
+            <span class="d-ico">▣</span>
+            <div>
+              <small>Paket Aktif</small>
+              <% if (paket) { %>
+                <strong><%= paket.nama %></strong><em>Berakhir pada <%= paket.berakhir %></em>
+              <% } else { %>
+                <strong>Belum ada</strong><em>Pilih paket di katalog</em>
+              <% } %>
+            </div>
+            <span class="d-arrow">›</span>
+          </a>
+          <a class="d-stat" href="/riwayat">
+            <span class="d-ico">◈</span>
+            <div><small>Total Pesanan</small><strong><%= totalPesanan %> pesanan</strong><em>dalam 1 bulan terakhir</em></div>
+            <span class="d-arrow">›</span>
+          </a>
+        </div>
+
+        <h2 class="d-judul">Pesanan Terbaru</h2>
+        <% if (pesanan.length) { %>
+          <% pesanan.forEach(o => { %>
+            <article class="d-order">
+              <% if (o.gambar) { %>
+                <img src="<%= o.gambar %>" alt="<%= o.judul %>">
+              <% } else { %>
+                <span class="d-ph"><%= String(o.judul).replace(/^Paket\s+/, '').charAt(0) %></span>
+              <% } %>
+              <div class="d-order-info">
+                <small><%= o.kode %></small>
+                <h3><%= o.judul %>
+                  <span class="d-badge <%= kelasStatus[o.status] %>"><%= labelStatus[o.status] %></span>
+                </h3>
+                <small><%= o.tanggal %></small>
+                <p class="d-harga"><%= rp(o.harga) %><% if (o.satuan) { %> <small>/<%= o.satuan %></small><% } %></p>
+              </div>
+              <a class="d-btn-detail" href="/riwayat">Lihat Detail ›</a>
+            </article>
+          <% }) %>
+        <% } else { %>
+          <div class="d-kosong">
+            Kamu belum punya pesanan. Pilih layanan di katalog, masukkan ke keranjang, lalu pesan.
+            <br><a class="d-btn" href="/katalog">Lihat Katalog Layanan</a>
+          </div>
+        <% } %>
+
+        <h2 class="d-judul">Progress Pekerjaan<% if (progressKode) { %> <small>· <%= progressKode %></small><% } %></h2>
+        <section class="d-card">
+          <% if (progress) { %>
+            <div class="d-steps">
+              <% progress.forEach(s => { %>
+                <div class="d-step <%= s.selesai ? 'done' : '' %>">
+                  <span class="d-dot"><%= s.selesai ? '✓' : '' %></span>
+                  <b><%= s.label %></b>
+                  <small><%= s.tanggal || '-' %></small>
+                </div>
+              <% }) %>
+            </div>
+            <div class="d-note">
+              <span class="d-ico">▣</span>
+              <p>Tim kami sedang mengerjakan konten sesuai dengan timeline yang telah disepakati.<br>Kami akan menginformasikan melalui email atau WhatsApp jika sudah ada update terbaru.</p>
+              <a href="/riwayat">Lihat Rincian →</a>
+            </div>
+          <% } else { %>
+            <div class="d-kosong polos">Belum ada pekerjaan berjalan. Progress akan muncul setelah kamu memesan layanan.</div>
+          <% } %>
+        </section>
+      </div>
+
+      <aside class="d-right">
+        <section class="d-card">
+          <% if (paket) { %>
+            <div class="d-paket-top">
+              <div>
+                <h3>Paket Saya</h3>
+                <p class="d-paket-nama"><%= paket.nama %></p>
+                <p class="d-harga"><%= rp(paket.harga) %> <small>/<%= paket.satuan %></small></p>
+              </div>
+              <a class="d-btn" href="/katalog">Upgrade Paket</a>
+            </div>
+            <% if (paket.benefit.length) { %>
+              <h4>Benefit Paket <%= paket.nama %></h4>
+              <ul class="d-benefit">
+                <% paket.benefit.forEach(b => { %><li><%= b %></li><% }) %>
+              </ul>
+            <% } %>
+          <% } else { %>
+            <h3 class="t">Paket Saya</h3>
+            <div class="d-kosong polos">Kamu belum punya paket aktif.<br><a class="d-btn" href="/katalog">Lihat Paket</a></div>
+          <% } %>
+        </section>
+
+        <section class="d-help">
+          <img src="/images/konsultasi-rutin.jpg" alt="">
+          <div>
+            <h3>Butuh bantuan?</h3>
+            <p>Tim kami siap membantu kamu kapan saja.</p>
+            <!-- GANTI nomor WhatsApp di bawah dengan nomor asli (format 62812..., tanpa + dan spasi) -->
+            <a class="d-btn" href="https://wa.me/62812xxxxxxxx" target="_blank" rel="noopener">Hubungi Kami</a>
+          </div>
+        </section>
+
+        <section class="d-card">
+          <div class="d-akt-head"><h3>Riwayat Aktivitas</h3><a href="/riwayat">Lihat Semua →</a></div>
+          <% if (aktivitas.length) { %>
+            <ul class="d-akt">
+              <% aktivitas.forEach(a => { %>
+                <li class="<%= a.selesai ? 'done' : '' %>">
+                  <span class="d-dot"><%= a.selesai ? '✓' : '' %></span>
+                  <div><b><%= a.judul %></b><p><%= a.ket %></p><small><%= a.tanggal %></small></div>
+                </li>
+              <% }) %>
+            </ul>
+          <% } else { %>
+            <div class="d-kosong polos">Belum ada aktivitas.</div>
+          <% } %>
+        </section>
+      </aside>
+    </div>
+<% } %>
+  </main>
+</div>
+
+<!-- DIALOG KELUAR -->
+<dialog id="dlgKeluar" class="d-dialog">
+  <button type="button" class="d-x" id="btnBatalX" aria-label="Tutup">×</button>
+  <span class="d-dlg-ico">⇥</span>
+  <h3>Keluar dari Akun?</h3>
+  <p>Kamu akan kembali ke halaman utama. Pastikan semua perubahan sudah tersimpan.</p>
+  <div class="d-dlg-aksi">
+    <button type="button" class="d-btn-out" id="btnBatal">Batal</button>
+    <form method="POST" action="/keluar"><button type="submit" class="d-btn">Keluar</button></form>
+  </div>
+</dialog>
+
+<script>
+  const dlg = document.getElementById('dlgKeluar');
+  document.getElementById('btnKeluar').addEventListener('click', () => dlg.showModal());
+  ['btnBatal', 'btnBatalX'].forEach(id => document.getElementById(id).addEventListener('click', () => dlg.close()));
+  dlg.addEventListener('click', e => { if (e.target === dlg) dlg.close(); });
+  document.querySelectorAll('.d-bar-isi').forEach(el => { el.style.width = el.dataset.lebar + '%'; });
+</script>
+</body>
+</html>

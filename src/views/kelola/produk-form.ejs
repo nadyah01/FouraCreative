@@ -1,0 +1,43 @@
+<%- include('../partials/header') %>
+<section class="form-wrap wide">
+  <h1><%= produk ? 'Ubah Produk' : 'Tambah Produk' %></h1>
+  <% if (error) { %><p class="err"><%= error %></p><% } %>
+  <% if (!kategori.length) { %>
+    <p class="err">Belum ada kategori. <% if (role === 'admin') { %><a href="/kelola/kategori/baru">Buat kategori dulu</a>.<% } else { %>Minta admin membuat kategori dulu.<% } %></p>
+  <% } %>
+  <form method="post" action="<%= produk ? '/kelola/produk/' + produk.id : '/kelola/produk' %>" enctype="multipart/form-data" class="form kartu">
+    <label>Nama produk<input name="name" maxlength="100" value="<%= form.name || '' %>" required></label>
+    <div class="dua">
+      <label>Kategori
+        <select name="category_id" required>
+          <option value="">— pilih —</option>
+          <% kategori.forEach(k => { %><option value="<%= k.id %>" <%= String(form.category_id) === String(k.id) ? 'selected' : '' %>><%= k.name_kategori %></option><% }) %>
+        </select>
+      </label>
+      <label>Harga (Rp)<input type="number" name="price" min="0" step="1" value="<%= form.price !== undefined ? Math.round(Number(form.price)) : '' %>" required></label>
+    </div>
+    <label>Deskripsi<textarea name="deskripsi"><%= form.deskripsi || '' %></textarea></label>
+    <label>Gambar utama <span class="bantuan">(JPG/PNG/WEBP/GIF, maks. 2 MB)</span>
+      <input type="file" name="image" accept="image/jpeg,image/png,image/webp,image/gif">
+    </label>
+    <% if (produk && produk.image) { %><p class="bantuan">Gambar saat ini:<br><img src="/uploads/<%= produk.image %>" alt="" style="width:120px;border-radius:8px"></p><% } %>
+    <label>Gambar tambahan <span class="bantuan">(boleh pilih beberapa, maks. 5)</span>
+      <input type="file" name="gambar_tambahan" accept="image/jpeg,image/png,image/webp,image/gif" multiple>
+    </label>
+    <button class="btn">Simpan</button>
+  </form>
+
+  <% if (produk && media.length) { %>
+    <h2>Gambar Tambahan</h2>
+    <div class="media-list">
+      <% media.forEach(m => { %>
+        <figure>
+          <img src="/uploads/<%= m.file %>" alt="">
+          <form method="post" action="/kelola/produk/<%= produk.id %>/media/<%= m.id %>/hapus" onsubmit="return confirm('Hapus gambar ini?')"><button class="btn bahaya sm" style="margin-top:.4rem">Hapus</button></form>
+        </figure>
+      <% }) %>
+    </div>
+  <% } %>
+  <p><a href="/kelola/produk">← Kembali</a></p>
+</section>
+<%- include('../partials/footer') %>

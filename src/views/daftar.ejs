@@ -1,0 +1,24 @@
+<%- include('partials/header') %>
+<section class="form-wrap wide">
+  <h1>Daftar Akun</h1>
+  <p class="muted">Sudah punya akun? <a href="/masuk">Masuk</a></p>
+  <% if (error) { %><p class="err"><%= error %></p><% } %>
+  <form method="post" action="/daftar" class="form kartu">
+    <div class="dua">
+      <label>Nama<input name="first_name" value="<%= form.first_name || '' %>" required></label>
+      <label>Username<input name="username" value="<%= form.username || '' %>" required autocomplete="username"></label>
+    </div>
+      <label>Nama UMKM<input name="nama_umkm" value="<%= form.nama_umkm || '' %>" placeholder="Contoh: Toko Batik Daeng"></label>
+    <div class="dua">
+      <label>Email<input type="email" name="email" value="<%= form.email || '' %>"></label>
+      <label>No. WhatsApp<input name="no_hp" value="<%= form.no_hp || '' %>" placeholder="0812-xxxx-xxxx"></label>
+    </div>
+    <label>Alamat<textarea name="alamat"><%= form.alamat || '' %></textarea></label>
+    <div class="dua">
+      <label>Password<input type="password" name="password" minlength="8" required autocomplete="new-password"></label>
+      <label>Ulangi password<input type="password" name="password2" minlength="8" required autocomplete="new-password"></label>
+    </div>
+    <button class="btn">Buat Akun</button>
+  </form>
+</section>
+<%- include('partials/footer') %>

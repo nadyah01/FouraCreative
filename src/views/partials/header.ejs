@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title><%= locals.title ? title + ' — ' : '' %>Foura Creative</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Playfair+Display:wght@500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css">
+  <script src="/js/keranjang.js" defer></script>
+</head>
+<body>
+
+<header class="nav" id="nav">
+  <div class="nav-pill">
+
+    <a class="brand" href="/">
+      <img src="/images/logo.png" alt="Logo Foura Creative" class="logo-img">
+      <span class="brand-name">Foura Creative</span>
+    </a>
+
+    <nav class="links">
+      <a href="/" class="<%= path === '/' ? 'active' : '' %>">Beranda</a>
+      <a href="/katalog" class="<%= path.startsWith('/katalog') || path.startsWith('/produk') ? 'active' : '' %>">Katalog Layanan</a>
+      <span class="nonaktif" title="Segera hadir" aria-disabled="true">Portofolio</span>
+      <span class="nonaktif" title="Segera hadir" aria-disabled="true">Tentang Kami</span>
+      <% if (role === 'admin') { %>
+        <a href="/kelola" class="<%= path.startsWith('/kelola') ? 'active' : '' %>">Kelola</a>
+      <% } %>
+    </nav>
+
+    <div class="aksi">
+      <% if (typeof user !== 'undefined' && user) { %>
+      <% if (role === 'customer') { %>
+  <a href="/keranjang" class="nav-cart">Keranjang<% if (typeof jumlahKeranjang !== 'undefined' && jumlahKeranjang > 0) { %> <span class="nav-cart-n"><%= jumlahKeranjang %></span><% } %></a>
+<% } %>
+    <a href="/dashboard" class="nav-avatar" title="Dashboard">
+    <% if (typeof fotoUser !== 'undefined' && fotoUser) { %>
+      <img src="<%= fotoUser %>" alt="Foto profil">
+    <% } else { %>
+      <%= String(user.first_name || user.username || 'U').charAt(0).toUpperCase() %>
+    <% } %>
+  </a>
+<% } else { %>
+  <a class="btn-outline" href="/masuk">Masuk</a>
+  <a class="btn-solid" href="/daftar">Daftar</a>
+<% } %>
+    </div>
+
+  </div>
+</header>
+
+<% if (flash) { %><div class="pesan"><p class="<%= flash.type %>"><%= flash.msg %></p></div><% } %>
+
+<main>

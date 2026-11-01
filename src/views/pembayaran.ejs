@@ -1,0 +1,85 @@
+<%- include('partials/pay-head') %>
+<main class="page by-page">
+  <h1 class="kr-judul">Pembayaran</h1>
+  <p class="muted">Periksa pesananmu, isi data, lalu pilih cara bayar.</p>
+
+  <form method="post" action="/pembayaran" enctype="multipart/form-data" class="kr-grid by-form">
+    <div>
+      <% if (errors && errors.length) { %>
+        <div class="by-error"><% errors.forEach(function (e) { %><p><%= e %></p><% }) %></div>
+      <% } %>
+
+      <section class="by-kartu">
+        <h3>Data pemesan</h3>
+        <div class="by-baris">
+          <label>Nama
+            <input name="nama" value="<%= isi.nama %>" required maxlength="100">
+          </label>
+          <label>Nomor WhatsApp
+            <input name="no_hp" value="<%= isi.no_hp %>" required inputmode="tel" placeholder="081234567890">
+          </label>
+        </div>
+        <label>Catatan untuk tim (opsional)
+          <textarea name="catatan" maxlength="1000" placeholder="Contoh: brand fashion hijab, target usia 20-30"><%= isi.catatan %></textarea>
+        </label>
+      </section>
+
+      <section class="by-kartu">
+        <h3>Metode pembayaran</h3>
+
+        <div class="by-grup">
+          <div class="by-grup-head">
+            <span class="by-ico"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="13" rx="3"/><path d="M3 10h18M16 14.5h2"/></svg></span>
+            <div><b>E-Wallet</b><small>GoPay, QRIS, DANA</small></div>
+          </div>
+          <div class="by-opsi-list">
+            <label class="by-opsi"><span class="by-logo by-logo-gopay">gopay</span><b>GoPay</b><input type="radio" name="metode" value="gopay" <%= isi.metode === 'gopay' ? 'checked' : '' %>></label>
+            <label class="by-opsi"><span class="by-logo by-logo-qris">QRIS</span><b>QRIS</b><input type="radio" name="metode" value="qris" <%= isi.metode === 'qris' ? 'checked' : '' %>></label>
+            <label class="by-opsi"><span class="by-logo by-logo-dana">DANA</span><b>DANA</b><input type="radio" name="metode" value="dana" <%= isi.metode === 'dana' ? 'checked' : '' %>></label>
+          </div>
+        </div>
+
+        <div class="by-grup">
+          <div class="by-grup-head">
+            <span class="by-ico"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10l9-6 9 6M5 10v8M9.5 10v8M14.5 10v8M19 10v8M3 20h18"/></svg></span>
+            <div><b>Transfer Bank</b><small><%= cfg.bank.map(function (b) { return b.nama; }).join(', ') %></small></div>
+          </div>
+          <div class="by-opsi-list">
+            <label class="by-opsi"><span class="by-logo by-logo-bank">BANK</span><b>Transfer Bank</b><input type="radio" name="metode" value="transfer" <%= isi.metode === 'transfer' ? 'checked' : '' %>></label>
+          </div>
+        </div>
+
+        <%- include('partials/pay-panel') %>
+
+        <label class="by-upload">Bukti bayar (opsional, bisa diunggah nanti)
+          <input type="file" name="bukti" accept="image/jpeg,image/png,image/webp">
+          <small>JPG, PNG, atau WEBP, maksimal <%= cfg.batasMB %> MB.</small>
+        </label>
+      </section>
+    </div>
+
+    <aside class="kr-ringkas">
+      <h3>Ringkasan</h3>
+      <% items.forEach(function (i) { %>
+        <div class="by-item">
+          <div><b><%= i.nama %></b><small><%= i.jumlah %> × <%= rupiah(i.harga) %></small></div>
+          <span><%= rupiah(i.subtotal) %></span>
+        </div>
+      <% }) %>
+      <div class="kr-total"><span>Total</span><b><%= rupiah(total) %></b></div>
+      <button class="kr-btn" type="submit">Konfirmasi Pesanan</button>
+      <p class="kr-kecil"><a href="/keranjang">← Kembali ke keranjang</a></p>
+      <p class="kr-kecil">Setelah memesan, tim kami akan memeriksa pembayaran dan menghubungi kamu lewat WhatsApp untuk brief.</p>
+    </aside>
+  </form>
+</main>
+<script>
+  function tampil() {
+    var r = document.querySelector('input[name=metode]:checked');
+    var v = r ? r.value : '';
+    document.querySelectorAll('[data-metode]').forEach(function (e) { e.hidden = e.getAttribute('data-metode') !== v; });
+  }
+  document.querySelectorAll('input[name=metode]').forEach(function (r) { r.addEventListener('change', tampil); });
+  tampil();
+</script>
+<%- include('partials/pay-foot') %>

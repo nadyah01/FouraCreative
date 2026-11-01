@@ -1,0 +1,61 @@
+<%- include('partials/header') %>
+<section class="banner" style="min-height:280px">
+  <div class="banner-isi">
+    <p class="eyebrow">Layanan Foura Creative</p>
+    <h1>Kelola Media Sosial,<br>Tumbuhkan <em>Brand</em> Kamu<br>Bersama <em>Foura Creative</em></h1>
+    <p class="banner-teks">Paket dan layanan kami dirancang khusus untuk membantu UMKM fashion di Makassar tampil lebih profesional di media sosial, dari konten kreatif sampai laporan performa.</p>
+  </div>
+</section>
+
+<section class="page">
+  <% if (role === 'guest') { %>
+    <div class="info-tamu">
+      <p>Sedang menjelajah sebagai <strong>Tamu</strong>. Masuk atau daftar untuk menyimpan pilihan ke keranjang, checkout, dan memantau progress pekerjaan.</p>
+      <div class="info-tamu-aksi">
+        <a class="chip" href="/masuk">Masuk</a>
+        <a class="chip on" href="/daftar">Daftar</a>
+      </div>
+    </div>
+  <% } %>
+
+  <% const qUrut = urut && urut !== 'rekomendasi' ? 'urut=' + urut : ''; %>
+
+  <div class="filter-bar">
+    <div class="chips">
+      <a class="chip <%= !aktif ? 'on' : '' %>" href="/katalog<%= qUrut ? '?' + qUrut : '' %>">Semua</a>
+      <% semuaKategori.forEach(k => { %>
+        <a class="chip <%= aktif === k.id ? 'on' : '' %>" href="/katalog?kategori=<%= k.id %><%= qUrut ? '&' + qUrut : '' %>"><%= k.name_kategori %></a>
+      <% }) %>
+    </div>
+
+    <form class="urut-form" method="GET" action="/katalog">
+      <% if (aktif) { %><input type="hidden" name="kategori" value="<%= aktif %>"><% } %>
+      <label for="urut">Urutkan</label>
+      <select id="urut" name="urut" onchange="this.form.submit()">
+        <option value="rekomendasi" <%= urut === 'rekomendasi' ? 'selected' : '' %>>Paling Direkomendasikan</option>
+        <option value="tertinggi" <%= urut === 'tertinggi' ? 'selected' : '' %>>Harga Tertinggi</option>
+        <option value="terendah" <%= urut === 'terendah' ? 'selected' : '' %>>Harga Terendah</option>
+      </select>
+    </form>
+  </div>
+
+  <% sections.forEach(k => { %>
+    <section class="blok" id="kategori-<%= k.id %>">
+      <h2><%= k.name_kategori %></h2>
+      <% if (k.deskripsi_kategori) { %><p class="muted"><%= k.deskripsi_kategori %></p><% } %>
+      <% if (k.products.length) { %>
+        <div class="kp-grid">
+          <% k.products.forEach(p => { %>
+            <%- include('partials/kartu-produk', { p, kat: k }) %>
+          <% }) %>
+        </div>
+      <% } else { %>
+        <p class="muted">Belum ada produk di kategori ini.</p>
+      <% } %>
+    </section>
+  <% }) %>
+
+  <% if (!sections.length) { %><p class="kosong">Belum ada data katalog.</p><% } %>
+</section>
+<%- include('partials/footer') %>
+

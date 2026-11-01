@@ -1,0 +1,54 @@
+<%- include('partials/pay-head') %>
+<main class="page by-page">
+  <div class="by-sukses">
+    <div class="by-centang">✓</div>
+    <h1 class="kr-judul">Pesanan diterima</h1>
+    <p class="muted">Kode pesanan kamu <b class="by-kode"><%= pesanan.kode %></b></p>
+  </div>
+
+  <div class="kr-grid by-form">
+    <div>
+      <section class="by-kartu">
+        <h3>Cara membayar</h3>
+        <p>Total yang harus dibayar: <b class="by-total"><%= rupiah(pesanan.total) %></b></p>
+        <p class="muted">Metode: <%= METODE[pesanan.metode_bayar] || '-' %></p>
+
+        <%- include('partials/pay-panel', { aktif: pesanan.metode_bayar }) %>
+
+        <p>Status pembayaran:
+          <% if (pesanan.status_bayar === 'lunas') { %><span class="st ok">Lunas</span>
+          <% } else if (pesanan.status_bayar === 'menunggu_verifikasi') { %><span class="st proses">Menunggu diperiksa</span>
+          <% } else { %><span class="st wait">Belum dibayar</span><% } %>
+        </p>
+
+        <% if (pesanan.status_bayar !== 'lunas') { %>
+          <form method="post" action="/pembayaran/selesai/<%= encodeURIComponent(pesanan.kode) %>/bukti" enctype="multipart/form-data" class="by-upload-form">
+            <label class="by-upload"><%= pesanan.bukti_bayar ? 'Ganti bukti bayar' : 'Unggah bukti bayar' %>
+              <input type="file" name="bukti" accept="image/jpeg,image/png,image/webp" required>
+              <small>JPG, PNG, atau WEBP, maksimal <%= cfg.batasMB %> MB.</small>
+            </label>
+            <button class="kr-btn by-btn-kecil" type="submit">Kirim bukti</button>
+          </form>
+        <% } %>
+        <% if (pesanan.bukti_bayar) { %>
+          <p class="muted">Bukti terkirim: <a href="<%= pesanan.bukti_bayar %>" target="_blank" rel="noopener">lihat gambar</a></p>
+        <% } %>
+      </section>
+    </div>
+
+    <aside class="kr-ringkas">
+      <h3>Pesananmu</h3>
+      <% pesanan.items.forEach(function (i) { %>
+        <div class="by-item">
+          <div><b><%= i.nama %></b><small><%= i.jumlah %> × <%= rupiah(i.harga) %></small></div>
+          <span><%= rupiah(i.harga * i.jumlah) %></span>
+        </div>
+      <% }) %>
+      <div class="kr-total"><span>Total</span><b><%= rupiah(pesanan.total) %></b></div>
+      <% if (pesanan.catatan) { %><p class="kr-kecil">Catatan: <%= pesanan.catatan %></p><% } %>
+      <a class="kr-btn by-link-btn" href="/riwayat">Lihat riwayat pesanan</a>
+      <p class="kr-kecil">Tim kami akan menghubungi <b><%= pesanan.no_hp %></b> setelah pembayaran diperiksa.</p>
+    </aside>
+  </div>
+</main>
+<%- include('partials/pay-foot') %>

@@ -1,0 +1,36 @@
+<%- include('partials/header') %>
+<% const rp = n => 'Rp ' + Number(n).toLocaleString('id-ID'); %>
+<section class="page">
+  <h1 class="kr-judul">Riwayat Pesanan</h1>
+  <p class="muted">Lihat riwayat pesanan dan status pengerjaan project kamu.</p>
+
+  <div class="chips">
+    <a class="chip <%= jenis === 'semua' ? 'on' : '' %>" href="/riwayat">Semua</a>
+    <a class="chip <%= jenis === 'paket' ? 'on' : '' %>" href="/riwayat?jenis=paket">Paket Bulanan</a>
+    <a class="chip <%= jenis === 'satuan' ? 'on' : '' %>" href="/riwayat?jenis=satuan">Jasa Satuan</a>
+  </div>
+
+  <% if (!daftar.length) { %>
+    <div class="kr-kosong">
+      <p>Belum ada pesanan. Pilih layanan di katalog untuk mulai.</p>
+      <a class="btn-tambah" href="/katalog">Lihat Katalog Layanan</a>
+    </div>
+  <% } else { %>
+    <% daftar.forEach(d => { %>
+      <article class="rw-item">
+        <% if (d.gambar) { %><img src="<%= d.gambar %>" alt=""><% } else { %><span class="kr-ph"><%= d.judul.replace(/^Paket\s+/, '').charAt(0) %></span><% } %>
+        <div class="rw-isi">
+          <small><%= d.kode %></small>
+          <h3><%= d.judul %> <span class="st <%= d.status === 'selesai' ? 'ok' : (d.status === 'dikerjakan' ? 'proses' : 'wait') %>"><%= LABEL_STATUS[d.status] %></span></h3>
+          <small><%= d.tanggal %></small>
+          <ul class="rw-list">
+            <% d.items.forEach(i => { %><li><%= i.nama %> × <%= i.jumlah %></li><% }) %>
+          </ul>
+          <small>Progress: <%= d.tahap %> dari <%= TAHAP.length %> tahap<%= d.tahap > 0 && d.tahap < TAHAP.length ? ' (' + TAHAP[d.tahap - 1] + ' selesai)' : '' %></small>
+        </div>
+        <b class="rw-total"><%= rp(d.total) %></b>
+      </article>
+    <% }) %>
+  <% } %>
+</section>
+<%- include('partials/footer') %>

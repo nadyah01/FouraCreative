@@ -1,0 +1,16 @@
+<%- include('../partials/header') %>
+<section class="form-wrap wide">
+  <h1><%= kat ? 'Ubah Kategori' : 'Tambah Kategori' %></h1>
+  <% if (error) { %><p class="err"><%= error %></p><% } %>
+  <form method="post" action="<%= kat ? '/kelola/kategori/' + kat.id : '/kelola/kategori' %>" enctype="multipart/form-data" class="form kartu">
+    <label>Nama kategori<input name="name_kategori" maxlength="100" value="<%= form.name_kategori || '' %>" required></label>
+    <label>Deskripsi<textarea name="deskripsi_kategori"><%= form.deskripsi_kategori || '' %></textarea></label>
+    <label>Gambar <span class="bantuan">(JPG/PNG/WEBP/GIF, maks. 2 MB)</span>
+      <input type="file" name="image" accept="image/jpeg,image/png,image/webp,image/gif">
+    </label>
+    <% if (kat && kat.image) { %><p class="bantuan">Gambar saat ini:<br><img src="/uploads/<%= kat.image %>" alt="" style="width:120px;border-radius:8px"></p><% } %>
+    <button class="btn">Simpan</button>
+  </form>
+  <p><a href="/kelola/kategori">← Kembali</a></p>
+</section>
+<%- include('../partials/footer') %>

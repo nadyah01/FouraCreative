@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title><%= title %> — Foura Creative</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Playfair+Display:wght@500;600&display=swap" rel="stylesheet">
+  <%# Dua baris di bawah: salah satunya pasti 404 (tidak masalah). Hapus yang tidak dipakai proyekmu. %>
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/style.css">
+  <link rel="stylesheet" href="/css/pembayaran.css">
+</head>
+<body>
+<%# Navbar sama dengan halaman lain. Kalau proyekmu punya partial header sendiri, boleh diganti. %>
+<header class="nav">
+  <div class="nav-pill">
+    <a class="brand" href="/">
+      <img class="logo-img" src="/images/logo.png" alt="" onerror="this.style.display='none'">
+      <span class="brand-name">Foura Creative</span>
+    </a>
+    <nav class="links">
+      <a href="/">Beranda</a>
+      <a href="/katalog">Katalog Layanan</a>
+      <span class="nonaktif">Portofolio</span>
+      <span class="nonaktif">Tentang Kami</span>
+    </nav>
+    <div class="aksi">
+      <a class="nav-cart" href="/keranjang">Keranjang <% if (jumlahKeranjang > 0) { %><span class="nav-cart-n"><%= jumlahKeranjang %></span><% } %></a>
+      <% if (user) { %>
+        <a class="nav-avatar" href="/profil" title="Profil">
+          <% if (fotoUser) { %><img src="<%= fotoUser %>" alt=""><% } else { %><%= (user.first_name || user.username).charAt(0).toUpperCase() %><% } %>
+        </a>
+      <% } %>
+    </div>
+  </div>
+</header>
+<% if (flash) { %><div class="pesan"><p class="<%= flash.type === 'error' ? 'error' : '' %>"><%= flash.msg %></p></div><% } %>

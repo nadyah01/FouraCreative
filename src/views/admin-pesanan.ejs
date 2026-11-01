@@ -1,0 +1,40 @@
+<%- include('partials/header') %>
+<% const rp = n => 'Rp ' + Number(n).toLocaleString('id-ID'); %>
+<section class="page">
+  <p class="eyebrow">Kelola</p>
+  <h1 class="kr-judul">Kelola Pesanan</h1>
+  <p class="muted">Ubah tahap pekerjaan. Perubahan langsung terlihat di dashboard pelanggan.</p>
+
+  <% if (!daftar.length) { %>
+    <div class="kr-kosong"><p>Belum ada pesanan masuk.</p></div>
+  <% } else { %>
+    <% daftar.forEach(p => { %>
+      <article class="ap-item">
+        <div class="ap-atas">
+          <div>
+            <b class="ap-kode"><%= p.kode %></b>
+            <span class="st <%= p.status === 'selesai' ? 'ok' : (p.status === 'dikerjakan' ? 'proses' : 'wait') %>"><%= LABEL_STATUS[p.status] %></span>
+            <p class="ap-meta"><%= p.pelanggan %> · <%= p.tanggal %></p>
+          </div>
+          <b class="ap-total"><%= rp(p.total) %></b>
+        </div>
+        <ul class="rw-list">
+          <% p.items.forEach(i => { %><li><%= i.nama %> × <%= i.jumlah %> — <%= rp(i.harga * i.jumlah) %></li><% }) %>
+        </ul>
+        <% if (p.catatan) { %><p class="ap-catatan">Catatan: <%= p.catatan %></p><% } %>
+        <form method="POST" action="/admin/pesanan/<%= p.id %>/tahap" class="ap-form">
+          <label>Tahap pekerjaan
+            <select name="tahap">
+              <option value="0" <%= p.tahap === 0 ? 'selected' : '' %>>Menunggu diproses</option>
+              <% TAHAP.forEach((t, i) => { %>
+                <option value="<%= i + 1 %>" <%= p.tahap === i + 1 ? 'selected' : '' %>><%= t %> selesai</option>
+              <% }) %>
+            </select>
+          </label>
+          <button type="submit" class="btn-tambah">Simpan</button>
+        </form>
+      </article>
+    <% }) %>
+  <% } %>
+</section>
+<%- include('partials/footer') %>

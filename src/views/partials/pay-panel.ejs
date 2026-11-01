@@ -1,0 +1,21 @@
+<%# Petunjuk bayar per metode. Kalau "aktif" diberikan, hanya metode itu yang terlihat. %>
+<% const aktifMetode = locals.aktif || null; %>
+
+<% ['gopay', 'dana'].forEach(function (k) { %>
+  <div class="by-panel" data-metode="<%= k %>" <%= aktifMetode && aktifMetode !== k ? 'hidden' : '' %>>
+    <p class="muted">Kirim sesuai total ke <%= METODE[k] %> berikut:</p>
+    <div class="by-rek"><b><%= METODE[k] %></b><span><%= cfg.ewallet[k].nomor %></span><small>a.n. <%= cfg.ewallet[k].atasNama %></small></div>
+  </div>
+<% }) %>
+
+<div class="by-panel" data-metode="qris" <%= aktifMetode && aktifMetode !== 'qris' ? 'hidden' : '' %>>
+  <p class="muted">Scan kode QRIS ini lewat aplikasi bank atau e-wallet kamu:</p>
+  <img class="by-qris" src="<%= cfg.qrisGambar %>" alt="Kode QRIS" onerror="this.outerHTML='<p class=&quot;by-error&quot;>Gambar QRIS belum dipasang.</p>'">
+</div>
+
+<div class="by-panel" data-metode="transfer" <%= aktifMetode && aktifMetode !== 'transfer' ? 'hidden' : '' %>>
+  <p class="muted">Transfer sesuai total ke salah satu rekening ini:</p>
+  <% cfg.bank.forEach(function (b) { %>
+    <div class="by-rek"><b><%= b.nama %></b><span><%= b.noRek %></span><small>a.n. <%= b.atasNama %></small></div>
+  <% }) %>
+</div>

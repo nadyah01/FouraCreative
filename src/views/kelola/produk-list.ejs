@@ -1,0 +1,24 @@
+<%- include('../partials/header') %>
+<section class="page">
+  <div class="bar"><h1>Kelola Produk</h1><a class="btn" href="/kelola/produk/baru">+ Tambah Produk</a></div>
+  <% if (daftar.length) { %>
+  <div class="scroll-x"><table class="tabel">
+    <thead><tr><th></th><th>Nama</th><th>Kategori</th><th>Harga</th><th>Aksi</th></tr></thead>
+    <tbody>
+    <% daftar.forEach(p => { %>
+      <tr>
+        <td><% if (p.image) { %><img class="thumb" src="/uploads/<%= p.image %>" alt=""><% } %></td>
+        <td><a href="/produk/<%= p.id %>"><%= p.name %></a></td>
+        <td><%= p.category ? p.category.name_kategori : '-' %></td>
+        <td><%= rupiah(p.price) %></td>
+        <td class="aksi-sel">
+          <a class="btn ghost sm" href="/kelola/produk/<%= p.id %>/edit">Ubah</a>
+          <form method="post" action="/kelola/produk/<%= p.id %>/hapus" onsubmit="return confirm('Hapus produk ini?')"><button class="btn bahaya sm">Hapus</button></form>
+        </td>
+      </tr>
+    <% }) %>
+    </tbody>
+  </table></div>
+  <% } else { %><p class="kosong">Belum ada produk.</p><% } %>
+</section>
+<%- include('../partials/footer') %>

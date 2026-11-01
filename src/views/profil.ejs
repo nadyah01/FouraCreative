@@ -1,0 +1,155 @@
+<%
+  const _admin = ['admin', 'seller'].includes(role);
+  const nama = user.first_name || user.username;
+  const lengkap = ((user.first_name || '') + ' ' + (user.last_name || '')).trim() || user.username;
+  const klien = role === 'customer';
+  const bergabung = user.createdAt
+    ? new Date(user.createdAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })
+    : '-';
+%>
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Profil Pengguna — Foura Creative</title>
+  <link rel="icon" type="image/png" href="/images/logo.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Playfair+Display:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<div class="d-app">
+
+  <aside class="d-side">
+    <a href="/" class="d-brand">
+      <img src="/images/logo.png" alt="Logo Foura Creative">
+      <div><b>Foura Creative</b><small>Create, Connect, Grow</small></div>
+    </a>
+    <nav class="d-menu">
+      <a href="/dashboard"><span>▦</span> Dashboard</a>
+      <% if (_admin) { %>
+        <a href="/admin/pesanan"><span>◈</span> Kelola Pesanan</a>
+        <a href="/kelola/produk"><span>▣</span> Kelola Katalog</a>
+        <a href="/kelola/kategori"><span>☰</span> Kelola Kategori</a>
+        <% if (role === 'admin') { %><a href="/kelola/pengguna"><span>☺</span> Kelola Pengguna</a><% } %>
+        <a href="/profil" class="on"><span>☺</span> Profil Pengguna</a>
+      <% } else { %>
+        <a href="/riwayat"><span>☰</span> Riwayat Pesanan</a>
+        <a href="/profil" class="on"><span>☺</span> Profil Pengguna</a>
+      <% } %>
+      <button type="button" id="btnKeluar"><span>⇥</span> Keluar</button>
+    </nav>
+    <p class="d-quote">More Views<br>More Customers</p>
+  </aside>
+
+  <main class="d-main">
+    <header class="d-top">
+      <div class="d-search"><input type="search" placeholder="Cari pesanan, layanan, atau informasi..."></div>
+      <div class="d-user">
+        <div class="d-chip">
+          <span class="d-ava"><%= String(nama).charAt(0).toUpperCase() %></span>
+          <div><b><%= nama %></b><small><%= LABEL[role] %></small></div>
+          <span class="d-caret">▾</span>
+        </div>
+      </div>
+    </header>
+
+    <h1 class="p-judul">Profil Pengguna</h1>
+    <p class="d-muted">Kelola informasi akun kamu agar tetap aman dan selalu up to date.</p>
+    <% if (locals.flash && flash) { %><p class="p-ok"><%= flash.msg %></p><% } %>
+    <% if (locals.error && error) { %><p class="p-err"><%= error %></p><% } %>
+
+    <div class="p-grid">
+      <div class="p-kiri">
+        <form class="d-card p-form" method="post" action="/profil" enctype="multipart/form-data">
+          <div class="p-head">
+            <div class="p-foto">
+              <% if (profil.foto) { %>
+                <img class="p-ava p-ava-img" id="fotoPreview" src="<%= profil.foto %>" alt="Foto profil">
+              <% } else { %>
+                <span class="p-ava" id="fotoHuruf"><%= String(nama).charAt(0).toUpperCase() %></span>
+                <img class="p-ava p-ava-img" id="fotoPreview" alt="Foto profil" hidden>
+              <% } %>
+              <label class="p-ganti">Ganti Foto
+                <input type="file" name="foto" id="fotoInput" accept="image/png,image/jpeg,image/webp" hidden>
+              </label>
+            </div>
+            <div>
+              <b><%= lengkap %></b>
+              <small><%= user.email || '-' %></small>
+              <% if (klien && profil.nama_umkm) { %><span class="p-umkm"><%= profil.nama_umkm %></span><% } %>
+            </div>
+          </div>
+
+          <div class="p-baris">
+            <label>Nama depan<input name="first_name" value="<%= user.first_name %>" required></label>
+            <label>Nama belakang<input name="last_name" value="<%= user.last_name %>"></label>
+          </div>
+          <% if (klien) { %>
+            <label>Nama UMKM<input name="nama_umkm" value="<%= profil.nama_umkm || '' %>" placeholder="Contoh: Toko Batik Daeng"></label>
+          <% } %>
+          <div class="p-baris">
+            <label>Email<input type="email" name="email" value="<%= user.email %>"></label>
+            <label>No. WhatsApp<input name="no_hp" value="<%= profil.no_hp || '' %>" placeholder="0812-xxxx-xxxx"></label>
+          </div>
+          <label>Alamat<textarea name="alamat" rows="3" placeholder="Makassar, Sulawesi Selatan"><%= profil.alamat || '' %></textarea></label>
+
+          <button type="submit" class="d-btn p-simpan">Simpan Perubahan</button>
+        </form>
+
+        <form class="d-card p-form" method="post" action="/profil/password" style="margin-top:18px">
+          <h3 class="t">Ubah Password</h3>
+          <label>Password lama<input type="password" name="lama" required autocomplete="current-password"></label>
+          <div class="p-baris">
+            <label>Password baru<input type="password" name="baru" minlength="8" required autocomplete="new-password"></label>
+            <label>Ulangi password baru<input type="password" name="baru2" minlength="8" required autocomplete="new-password"></label>
+          </div>
+          <button type="submit" class="d-btn-out">Ubah Password</button>
+        </form>
+      </div>
+
+      <aside class="d-right">
+        <section class="d-card">
+          <h3 class="t">Informasi Akun</h3>
+          <div class="p-info"><span>Username</span><b><%= user.username %></b></div>
+          <div class="p-info"><span>Peran</span><b><%= LABEL[role] %></b></div>
+          <div class="p-info"><span>Bergabung Sejak</span><b><%= bergabung %></b></div>
+          <div class="p-info"><span>Status Akun</span><span class="d-badge ok">Aktif</span></div>
+        </section>
+      </aside>
+    </div>
+  </main>
+</div>
+
+<dialog id="dlgKeluar" class="d-dialog">
+  <button type="button" class="d-x" id="btnBatalX" aria-label="Tutup">×</button>
+  <span class="d-dlg-ico">⇥</span>
+  <h3>Keluar dari Akun?</h3>
+  <p>Kamu akan kembali ke halaman utama. Pastikan semua perubahan sudah tersimpan.</p>
+  <div class="d-dlg-aksi">
+    <button type="button" class="d-btn-out" id="btnBatal">Batal</button>
+    <form method="POST" action="/keluar"><button type="submit" class="d-btn">Keluar</button></form>
+  </div>
+</dialog>
+<script>
+  const dlg = document.getElementById('dlgKeluar');
+  document.getElementById('btnKeluar').addEventListener('click', () => dlg.showModal());
+  ['btnBatal', 'btnBatalX'].forEach(id => document.getElementById(id).addEventListener('click', () => dlg.close()));
+  dlg.addEventListener('click', e => { if (e.target === dlg) dlg.close(); });
+</script>
+<script>
+  const fotoInput = document.getElementById('fotoInput');
+  fotoInput.addEventListener('change', () => {
+    const f = fotoInput.files[0];
+    if (!f) return;
+    if (f.size > 2 * 1024 * 1024) { alert('Ukuran foto maksimal 2 MB.'); fotoInput.value = ''; return; }
+    const img = document.getElementById('fotoPreview');
+    img.src = URL.createObjectURL(f);
+    img.hidden = false;
+    const huruf = document.getElementById('fotoHuruf');
+    if (huruf) huruf.hidden = true;
+  });
+</script>
+</body>
+</html>
