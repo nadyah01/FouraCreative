@@ -8,7 +8,7 @@
 </section>
 
 <section class="page">
-  <% if (role === 'guest') { %>
+  <% if (!user) { %>
     <div class="info-tamu">
       <p>Sedang menjelajah sebagai <strong>Tamu</strong>. Masuk atau daftar untuk menyimpan pilihan ke keranjang, checkout, dan memantau progress pekerjaan.</p>
       <div class="info-tamu-aksi">

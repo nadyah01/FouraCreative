@@ -6,7 +6,8 @@ const {
   pastikanTabel, fmt, judulPesanan, itemPerPesanan,
   dataAdmin, dataUser,
 } = require('../services/pesanan');
-const wajibLogin = (req, res, next) => (res.locals.user ? next() : res.redirect('/masuk'));
+const wajibLogin = (req, res, next) =>
+  (res.locals.user ? next() : res.redirect('/masuk?next=' + encodeURIComponent(req.method === 'GET' ? req.originalUrl : '/katalog')));
 const wajibAdmin = (req, res, next) => {
   if (!res.locals.user) return res.redirect('/masuk');
   if (!['admin', 'seller'].includes(res.locals.role)) return res.status(403).send('Akses ditolak.');

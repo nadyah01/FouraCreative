@@ -2,7 +2,7 @@ const router = require('express').Router();
 const { sequelize, User, UserCostumer } = require('../models');
 
 const amanNext = (n) => (typeof n === 'string' && n.startsWith('/') && !n.startsWith('//') ? n : '/');
-const regenerate = (req) => new Promise((ok, no) => req.session.regenerate((e) => (e ? no(e) : ok())));
+const regenerate = async (req) => { req.session = {}; };
 
 router.get('/daftar', (req, res) => {
   if (req.user) return res.redirect('/');
@@ -62,7 +62,8 @@ router.post('/masuk', async (req, res, next) => {
 });
 
 router.post('/keluar', (req, res) => {
-  req.session.destroy(() => res.redirect('/'));
+  req.session = null;
+  res.redirect('/');
 });
 
 module.exports = router;

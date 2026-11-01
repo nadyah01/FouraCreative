@@ -36,12 +36,7 @@ const PesananItem = sequelize.define('PesananItem', {
 }, { tableName: 'pesanan_item' });
 
 // Membuat tabel kalau belum ada (sekali saja)
-let tabel = null;
-const pastikanTabel = () => tabel || (tabel = (async () => {
-  await Keranjang.sync();
-  await Pesanan.sync();
-  await PesananItem.sync();
-})());
+const pastikanTabel = async () => {};
 
 const fmt = d => new Date(d).toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' });
 const fmtPendek = d => new Date(d).toLocaleDateString('id-ID', { day: '2-digit', month: 'short' });

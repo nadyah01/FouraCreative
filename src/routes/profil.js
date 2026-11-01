@@ -7,18 +7,28 @@ const { getProfile } = require('../services/roles');
 
 router.use(requireLogin);
 
+// Di Vercel folder proyek hanya bisa dibaca, jadi unggah foto profil dinonaktifkan di versi online
+const ONLINE = !!process.env.VERCEL;
+
 // ---- Upload foto profil: disimpan di public/uploads/profil ----
 const folderUpload = path.join(__dirname, '..', '..', 'public', 'uploads', 'profil');
-fs.mkdirSync(folderUpload, { recursive: true });
+if (!ONLINE) {
+  try {
+    fs.mkdirSync(folderUpload, { recursive: true });
+  } catch (e) {
+    console.warn('Folder upload profil tidak bisa dibuat:', e.message);
+  }
+}
 const EKSTENSI = { 'image/jpeg': '.jpg', 'image/png': '.png', 'image/webp': '.webp' };
 
 const upload = multer({
   storage: multer.diskStorage({
-    destination: folderUpload,
+    destination: (req, file, cb) => cb(null, folderUpload),
     filename: (req, file, cb) => cb(null, `u${req.user.id}-${Date.now()}${EKSTENSI[file.mimetype]}`),
   }),
   limits: { fileSize: 2 * 1024 * 1024 }, // maksimal 2 MB
   fileFilter: (req, file, cb) => {
+    if (ONLINE) { req.fotoOnline = true; return cb(null, false); }
     const ok = Boolean(EKSTENSI[file.mimetype]);
     if (!ok) req.fotoDitolak = true;
     cb(null, ok);
@@ -53,6 +63,7 @@ router.post('/', terimaFoto, async (req, res, next) => {
     };
     const no_hp = (req.body.no_hp || '').trim();
     const first_name = (req.body.first_name || '').trim();
+    if (req.fotoOnline) return gagal('Unggah foto profil belum tersedia di versi online. Simpan data lain tanpa memilih foto.');
     if (req.fotoDitolak) return gagal('Foto harus berformat JPG, PNG, atau WEBP.');
     if (!first_name) return gagal('Nama wajib diisi.');
     if (no_hp && !/^[0-9+\-\s]{8,20}$/.test(no_hp)) return gagal('Nomor HP tidak valid.');

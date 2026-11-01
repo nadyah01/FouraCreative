@@ -56,8 +56,7 @@ async function sinkron() {
   console.log('Katalog disinkronkan dengan daftar harga FIX.');
 }
 
-let siap = null;
-const pastikan = () => siap || (siap = sinkron().catch(e => console.error('Sinkron katalog gagal:', e)));
+const pastikan = async () => {};
 
 // ---- Data tambahan katalog (satuan, fitur, waktu, label populer) ----
 const META = {};

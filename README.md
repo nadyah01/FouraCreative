@@ -11,11 +11,6 @@ npm start         # buka http://localhost:3000
 ```
 Mode pengembangan (restart otomatis): `npm run dev`
 
-## Akun contoh (dari seed)
-| Username | Password     | Peran     |
-|----------|--------------|-----------|
-| admin    | admin12345   | Admin     |  |
-| budi     | budi12345    | Pelanggan |
 
 ## Fitur
 - Publik: beranda, katalog (filter kategori), detail produk + galeri gambar
