@@ -1,5 +1,7 @@
 // Model untuk keranjang, pesanan, dan item pesanan (tabel sudah ada di foura_creative.sql).
-// Kolom pembayaran baru ditambahkan otomatis ke tabel `pesanan` saat pertama dipakai.
+// Memakai nama model sendiri supaya tidak bentrok dengan kode lain.
+// Kolom pembayaran baru ditambahkan otomatis ke tabel `pesanan` saat pertama dipakai,
+// jadi tidak perlu SQL manual.
 const { DataTypes } = require('sequelize');
 const sequelize = require('../db');
 
@@ -16,6 +18,8 @@ const KOLOM_BARU = {
   alamat:       { type: DataTypes.TEXT,        allowNull: true },
   metode_bayar: { type: DataTypes.STRING(30),  allowNull: true },
   bukti_bayar:  { type: DataTypes.STRING(255), allowNull: true },
+  bukti_data:   { type: DataTypes.TEXT('long'), allowNull: true },
+  bukti_mime:   { type: DataTypes.STRING(30),  allowNull: true },
   status_bayar: { type: DataTypes.STRING(30),  allowNull: true, defaultValue: 'belum_bayar' },
 };
 

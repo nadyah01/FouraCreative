@@ -1,6 +1,4 @@
 const express = require('express');
-const path = require('path');
-const fs = require('fs');
 const crypto = require('crypto');
 const multer = require('multer');
 const { requireLogin } = require('../middleware/auth');
@@ -10,19 +8,15 @@ const sequelize = require('../db');
 const cfg = require('../config/pembayaran');
 
 const router = express.Router();
-const FOLDER_PUBLIK = path.join(__dirname, '..', '..', 'public');
-const FOLDER_BUKTI = path.join(FOLDER_PUBLIK, 'uploads', 'bukti');
-try { fs.mkdirSync(FOLDER_BUKTI, { recursive: true }); } catch (e) { /* di Vercel folder tidak bisa dibuat */ }
 
 const METODE = cfg.metode;
 const EKSTENSI = { 'image/jpeg': '.jpg', 'image/png': '.png', 'image/webp': '.webp' };
 
-/* ---------- upload bukti bayar ---------- */
+/* ---------- upload bukti bayar ----------
+   Bukti disimpan di DATABASE (bukan di folder), jadi aman dipakai di Vercel
+   yang foldernya tidak bisa ditulisi. */
 const upload = multer({
-  storage: multer.diskStorage({
-    destination: FOLDER_BUKTI,
-    filename: (req, file, cb) => cb(null, `bukti-${Date.now()}-${crypto.randomBytes(4).toString('hex')}${EKSTENSI[file.mimetype]}`),
-  }),
+  storage: multer.memoryStorage(),
   limits: { fileSize: cfg.batasMB * 1024 * 1024 },
   fileFilter: (req, file, cb) => cb(EKSTENSI[file.mimetype] ? null : new Error('FORMAT'), !!EKSTENSI[file.mimetype]),
 });
@@ -32,9 +26,10 @@ const unggah = (req, res, next) => upload.single('bukti')(req, res, (err) => {
     : 'Bukti bayar harus berupa gambar JPG, PNG, atau WEBP.';
   next();
 });
-const hapusFile = (rel) => {
-  if (rel && rel.startsWith('/uploads/bukti/')) fs.unlink(path.join(FOLDER_PUBLIK, rel), () => {});
-};
+// Kolom bukti yang diisi dari file unggahan (kosong kalau tidak ada file)
+const kolomBukti = (file, kode) => file
+  ? { bukti_bayar: '/pembayaran/bukti/' + encodeURIComponent(kode), bukti_data: file.buffer.toString('base64'), bukti_mime: file.mimetype }
+  : { bukti_bayar: null, bukti_data: null, bukti_mime: null };
 
 /* ---------- bantuan ---------- */
 async function muatKeranjang(userId, opsi = {}) {
@@ -107,7 +102,6 @@ router.get('/', requireLogin, async (req, res, next) => {
 
 /* ---------- POST /pembayaran : buat pesanan ---------- */
 router.post('/', requireLogin, unggah, async (req, res, next) => {
-  const fileBaru = req.file ? '/uploads/bukti/' + req.file.filename : null;
   try {
     await siapkan();
     const b = req.body;
@@ -128,7 +122,6 @@ router.post('/', requireLogin, unggah, async (req, res, next) => {
     if (!METODE[metode]) errors.push('Pilih salah satu metode pembayaran.');
     if (req.errUpload) errors.push(req.errUpload);
     if (errors.length) {
-      hapusFile(fileBaru);
       return tampilkanForm(req, res, {
         status: 400, errors,
         nilai: { nama_depan, nama_belakang, nama_umkm, email, alamat, no_hp: String(b.no_hp || ''), catatan, metode },
@@ -143,7 +136,7 @@ router.post('/', requireLogin, unggah, async (req, res, next) => {
         kode, user_id: req.user.id, nama_pelanggan: nama, no_hp: hp, nama_umkm: nama_umkm || null,
         email: email || null, alamat: alamat || null, total: k.total,
         status: 'menunggu', tahap: 0, catatan: catatan || null, metode_bayar: metode,
-        bukti_bayar: fileBaru, status_bayar: fileBaru ? 'menunggu_verifikasi' : 'belum_bayar',
+        ...kolomBukti(req.file, kode), status_bayar: req.file ? 'menunggu_verifikasi' : 'belum_bayar',
       }, { transaction: t });
       await CheckoutPesananItem.bulkCreate(k.items.map((i) => ({
         pesanan_id: pesanan.id, product_id: i.produk.id, nama: i.nama, kategori: i.kategori,
@@ -154,19 +147,19 @@ router.post('/', requireLogin, unggah, async (req, res, next) => {
     });
 
     if (!hasil) {
-      hapusFile(fileBaru);
       req.flash('error', 'Keranjang kamu masih kosong.');
       return res.redirect('/keranjang');
     }
     req.flash('ok', 'Pesanan berhasil dibuat.');
     res.redirect('/pembayaran/selesai/' + encodeURIComponent(kode));
-  } catch (e) { hapusFile(fileBaru); next(e); }
+  } catch (e) { next(e); }
 });
 
 /* ---------- halaman setelah memesan ---------- */
 async function ambilPesanan(req) {
   return CheckoutPesanan.findOne({
     where: { kode: req.params.kode, user_id: req.user.id },
+    attributes: { exclude: ['bukti_data'] },
     include: [{ model: CheckoutPesananItem, as: 'items' }],
   });
 }
@@ -184,24 +177,32 @@ router.get('/selesai/:kode', requireLogin, async (req, res, next) => {
 });
 
 router.post('/selesai/:kode/bukti', requireLogin, unggah, async (req, res, next) => {
-  const fileBaru = req.file ? '/uploads/bukti/' + req.file.filename : null;
   try {
     await siapkan();
     const pesanan = await ambilPesanan(req);
     const balik = '/pembayaran/selesai/' + encodeURIComponent(req.params.kode);
-    if (!pesanan) { hapusFile(fileBaru); return res.status(404).render('error', { title: 'Tidak ditemukan', pesan: 'Pesanan tidak ditemukan.' }); }
-    if (pesanan.status_bayar === 'lunas') { hapusFile(fileBaru); req.flash('error', 'Pesanan ini sudah lunas.'); return res.redirect(balik); }
-    if (req.errUpload || !fileBaru) {
-      hapusFile(fileBaru);
+    if (!pesanan) return res.status(404).render('error', { title: 'Tidak ditemukan', pesan: 'Pesanan tidak ditemukan.' });
+    if (pesanan.status_bayar === 'lunas') { req.flash('error', 'Pesanan ini sudah lunas.'); return res.redirect(balik); }
+    if (req.errUpload || !req.file) {
       req.flash('error', req.errUpload || 'Pilih file bukti bayar dulu.');
       return res.redirect(balik);
     }
-    const lama = pesanan.bukti_bayar;
-    await pesanan.update({ bukti_bayar: fileBaru, status_bayar: 'menunggu_verifikasi' });
-    hapusFile(lama);
+    await pesanan.update({ ...kolomBukti(req.file, pesanan.kode), status_bayar: 'menunggu_verifikasi' });
     req.flash('ok', 'Bukti bayar terkirim. Tim kami akan memeriksanya.');
     res.redirect(balik);
-  } catch (e) { hapusFile(fileBaru); next(e); }
+  } catch (e) { next(e); }
+});
+
+/* ---------- tampilkan gambar bukti (pemilik pesanan atau admin) ---------- */
+router.get('/bukti/:kode', requireLogin, async (req, res, next) => {
+  try {
+    await siapkan();
+    const pesanan = await CheckoutPesanan.findOne({ where: { kode: req.params.kode } });
+    const boleh = pesanan && (pesanan.user_id === req.user.id || req.role === 'admin');
+    if (!boleh || !pesanan.bukti_data) return res.status(404).render('error', { title: 'Tidak ditemukan', pesan: 'Bukti bayar tidak ditemukan.' });
+    res.set('Cache-Control', 'private, no-store');
+    res.type(pesanan.bukti_mime || 'image/jpeg').send(Buffer.from(pesanan.bukti_data, 'base64'));
+  } catch (e) { next(e); }
 });
 
 module.exports = router;
