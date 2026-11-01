@@ -12,7 +12,7 @@ const cfg = require('../config/pembayaran');
 const router = express.Router();
 const FOLDER_PUBLIK = path.join(__dirname, '..', '..', 'public');
 const FOLDER_BUKTI = path.join(FOLDER_PUBLIK, 'uploads', 'bukti');
-fs.mkdirSync(FOLDER_BUKTI, { recursive: true });
+try { fs.mkdirSync(FOLDER_BUKTI, { recursive: true }); } catch (e) { /* di Vercel folder tidak bisa dibuat */ }
 
 const METODE = cfg.metode;
 const EKSTENSI = { 'image/jpeg': '.jpg', 'image/png': '.png', 'image/webp': '.webp' };
@@ -57,11 +57,15 @@ async function muatKeranjang(userId, opsi = {}) {
 
 const hitungKeranjang = async (userId) => (await CheckoutKeranjang.sum('jumlah', { where: { user_id: userId } })) || 0;
 
-async function nomorHpProfil(user) {
-  try { const p = await UserCostumer.findOne({ where: { user_id: user.id } }); return (p && p.no_hp) || ''; } catch (e) { return ''; }
-}
+// Nilai "-" (isian kosong bawaan di profil) dianggap kosong
+const bersih = (v) => { v = String(v ?? '').trim(); return v === '-' ? '' : v; };
 
-const namaLengkap = (u) => [u.first_name, u.last_name].filter(Boolean).join(' ') || u.username;
+async function ambilProfil(user) {
+  try {
+    const p = await UserCostumer.findOne({ where: { user_id: user.id } });
+    return { no_hp: bersih(p && p.no_hp), nama_umkm: bersih(p && p.nama_umkm), alamat: bersih(p && p.alamat) };
+  } catch (e) { return { no_hp: '', nama_umkm: '', alamat: '' }; }
+}
 
 async function buatKode() {
   const t = new Date();
@@ -79,9 +83,14 @@ async function tampilkanForm(req, res, { status = 200, errors = null, nilai = {}
     req.flash('error', 'Keranjang kamu masih kosong.');
     return res.redirect('/keranjang');
   }
+  const profil = await ambilProfil(req.user);
   const isi = {
-    nama: nilai.nama ?? namaLengkap(req.user),
-    no_hp: nilai.no_hp ?? await nomorHpProfil(req.user),
+    nama_depan: nilai.nama_depan ?? bersih(req.user.first_name),
+    nama_belakang: nilai.nama_belakang ?? bersih(req.user.last_name),
+    nama_umkm: nilai.nama_umkm ?? profil.nama_umkm,
+    email: nilai.email ?? bersih(req.user.email),
+    no_hp: nilai.no_hp ?? profil.no_hp,
+    alamat: nilai.alamat ?? profil.alamat,
     catatan: nilai.catatan ?? String(req.query.catatan || ''),
     metode: nilai.metode || 'qris',
   };
@@ -101,19 +110,29 @@ router.post('/', requireLogin, unggah, async (req, res, next) => {
   const fileBaru = req.file ? '/uploads/bukti/' + req.file.filename : null;
   try {
     await siapkan();
-    const nama = String(req.body.nama || '').trim();
-    const hp = String(req.body.no_hp || '').replace(/[\s-]/g, '');
-    const metode = String(req.body.metode || '');
-    const catatan = String(req.body.catatan || '').trim().slice(0, 1000);
+    const b = req.body;
+    const nama_depan = bersih(b.nama_depan).slice(0, 100);
+    const nama_belakang = bersih(b.nama_belakang).slice(0, 100);
+    const nama_umkm = bersih(b.nama_umkm).slice(0, 150);
+    const email = bersih(b.email).slice(0, 255);
+    const alamat = bersih(b.alamat).slice(0, 500);
+    const hp = String(b.no_hp || '').replace(/[\s-]/g, '');
+    const metode = String(b.metode || '');
+    const catatan = String(b.catatan || '').trim().slice(0, 1000);
+    const nama = [nama_depan, nama_belakang].filter(Boolean).join(' ');
 
     const errors = [];
-    if (nama.length < 2) errors.push('Nama wajib diisi.');
+    if (!nama_depan) errors.push('Nama depan wajib diisi.');
+    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) errors.push('Email tidak valid.');
     if (!/^(\+62|62|0)8\d{7,12}$/.test(hp)) errors.push('Nomor WhatsApp tidak valid. Contoh: 081234567890.');
     if (!METODE[metode]) errors.push('Pilih salah satu metode pembayaran.');
     if (req.errUpload) errors.push(req.errUpload);
     if (errors.length) {
       hapusFile(fileBaru);
-      return tampilkanForm(req, res, { status: 400, errors, nilai: { nama, no_hp: String(req.body.no_hp || ''), catatan, metode } });
+      return tampilkanForm(req, res, {
+        status: 400, errors,
+        nilai: { nama_depan, nama_belakang, nama_umkm, email, alamat, no_hp: String(b.no_hp || ''), catatan, metode },
+      });
     }
 
     const kode = await buatKode();
@@ -121,7 +140,8 @@ router.post('/', requireLogin, unggah, async (req, res, next) => {
       const k = await muatKeranjang(req.user.id, { transaction: t });
       if (!k.items.length) return null;
       const pesanan = await CheckoutPesanan.create({
-        kode, user_id: req.user.id, nama_pelanggan: nama, no_hp: hp, total: k.total,
+        kode, user_id: req.user.id, nama_pelanggan: nama, no_hp: hp, nama_umkm: nama_umkm || null,
+        email: email || null, alamat: alamat || null, total: k.total,
         status: 'menunggu', tahap: 0, catatan: catatan || null, metode_bayar: metode,
         bukti_bayar: fileBaru, status_bayar: fileBaru ? 'menunggu_verifikasi' : 'belum_bayar',
       }, { transaction: t });

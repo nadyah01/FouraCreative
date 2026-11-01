@@ -11,6 +11,9 @@ const CheckoutKeranjang = sequelize.define('CheckoutKeranjang', {
 
 const KOLOM_BARU = {
   no_hp:        { type: DataTypes.STRING(20),  allowNull: true },
+  nama_umkm:    { type: DataTypes.STRING(150), allowNull: true },
+  email:        { type: DataTypes.STRING(255), allowNull: true },
+  alamat:       { type: DataTypes.TEXT,        allowNull: true },
   metode_bayar: { type: DataTypes.STRING(30),  allowNull: true },
   bukti_bayar:  { type: DataTypes.STRING(255), allowNull: true },
   status_bayar: { type: DataTypes.STRING(30),  allowNull: true, defaultValue: 'belum_bayar' },

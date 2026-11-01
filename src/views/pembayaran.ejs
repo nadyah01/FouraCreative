@@ -11,17 +11,30 @@
 
       <section class="by-kartu">
         <h3>Data pemesan</h3>
-        <div class="by-baris">
-          <label>Nama
-            <input name="nama" value="<%= isi.nama %>" required maxlength="100">
+        <div class="p-form">
+          <div class="p-baris">
+            <label>Nama depan
+              <input name="nama_depan" value="<%= isi.nama_depan %>" required maxlength="100">
+            </label>
+            <label>Nama belakang
+              <input name="nama_belakang" value="<%= isi.nama_belakang %>" maxlength="100">
+            </label>
+          </div>
+          <label>Nama UMKM
+            <input name="nama_umkm" value="<%= isi.nama_umkm %>" maxlength="150">
           </label>
-          <label>Nomor WhatsApp
-            <input name="no_hp" value="<%= isi.no_hp %>" required inputmode="tel" placeholder="081234567890">
+          <div class="p-baris">
+            <label>Email
+              <input type="email" name="email" value="<%= isi.email %>" maxlength="255">
+            </label>
+            <label>No. WhatsApp
+              <input name="no_hp" value="<%= isi.no_hp %>" required inputmode="tel" placeholder="081234567890">
+            </label>
+          </div>
+          <label>Catatan untuk tim (opsional)
+            <textarea name="catatan" maxlength="1000" placeholder="Contoh: brand fashion hijab, target usia 20-30"><%= isi.catatan %></textarea>
           </label>
         </div>
-        <label>Catatan untuk tim (opsional)
-          <textarea name="catatan" maxlength="1000" placeholder="Contoh: brand fashion hijab, target usia 20-30"><%= isi.catatan %></textarea>
-        </label>
       </section>
 
       <section class="by-kartu">

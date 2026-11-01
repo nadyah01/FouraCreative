@@ -26,6 +26,8 @@ app.use(cookieSession({
 }));
 app.use(require('./src/middleware/locals'));
 
+app.use('/pembayaran', require('./src/routes/pembayaran'));   // <-- BARIS BARU
+
 app.use('/', require('./src/routes/public'));
 app.use('/', require('./src/routes/auth'));
 app.use('/profil', require('./src/routes/profil'));
